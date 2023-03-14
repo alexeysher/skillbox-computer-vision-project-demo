@@ -1,6 +1,6 @@
 gdown==4.6.4
 keras==2.11.0
-opencv-python==4.6.0.66
+opencv-python-headless==4.7.0.72
 scipy==1.9.3
 statsmodels==0.13.5
 streamlit-option-menu==0.3.2
