@@ -338,7 +338,7 @@ def save_trailer(file_name: str, video_info: VideoInfo, fragments: pd.DataFrame)
         empty.empty()
         video_capture.release()
         trailer_writer.release()
-        args = f"ffmpeg -y -i {temp_name} -c:v libx264 {trailer_name}".split(" ")
+        args = f"ffmpeg -y -i ./{temp_name} -c:v libx264 ./{trailer_name}".split(" ")
         subprocess.call(args=args)
         # Path(temp_name).unlink()
     return trailer_name
