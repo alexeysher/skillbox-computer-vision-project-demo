@@ -1,4 +1,5 @@
-import hashlib
+import io
+
 import gdown
 from shutil import rmtree
 
@@ -337,7 +338,9 @@ def save_trailer(file_name: str, video_info: VideoInfo, fragments: pd.DataFrame)
     empty.empty()
     video_capture.release()
     trailer_writer.release()
-    return trailer_name
+    f = io.FileIO(trailer_name)
+    data = f.readall()
+    return trailer_name, data
 
 
 def download_trailer(trailer_name: str):
@@ -380,8 +383,8 @@ def main():
             st.warning('Не найдено ни одного фрагмента')
             return
     with trailer_col_2:
-        trailer_name = save_trailer(file_name, video_info, fragments)
-        st.video(trailer_name)
+        trailer_name, trailer_data = save_trailer(file_name, video_info, fragments)
+        st.video(trailer_data)
     with trailer_col_3:
         display_fragments_table(fragments)
     with trailer_col_1:
