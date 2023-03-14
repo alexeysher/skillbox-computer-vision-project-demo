@@ -318,12 +318,11 @@ def save_trailer(file_name: str, video_info: VideoInfo, fragments: pd.DataFrame)
         video_capture = cv2.VideoCapture(file_name)
 
         temp_name = 'temp.mp4'
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         trailer_name = Path(file_name).stem + '_trailer.mp4'
-        st.markdown(f'temp_name = "{temp_name}", trailer_name = "{trailer_name}"')
         trailer_writer = cv2.VideoWriter(
-            temp_name, video_info.fourcc, video_info.frame_rate,
+            temp_name, fourcc, video_info.frame_rate,
             (video_info.frame_width, video_info.frame_height))
-
         trailer_frames_number = (fragments['end_frame'] - fragments['start_frame'] + 1).sum()
         frames_number = 0
         empty = st.empty()
@@ -340,7 +339,7 @@ def save_trailer(file_name: str, video_info: VideoInfo, fragments: pd.DataFrame)
         trailer_writer.release()
         args = f"ffmpeg -y -i ./{temp_name} -c:v libx264 ./{trailer_name}".split(" ")
         subprocess.call(args=args)
-        # Path(temp_name).unlink()
+        Path(temp_name).unlink()
     return trailer_name
 
 
