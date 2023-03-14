@@ -14,7 +14,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 from emotion_recognition import FaceEmotionRecognitionNet, EMOTIONS
-from fourcc import FourCC
 
 st.set_page_config(page_title='Создание трейлеров', page_icon=':film_frames:',
                    layout="wide", initial_sidebar_state="expanded")
@@ -32,7 +31,6 @@ class VideoInfo:
     frame_rate: float = 0.
     frames_number: int = 0
     fourcc: int = 0
-    fourcc_str: str = ''
     duration: timedelta = timedelta(0, 0, 0, 0, 0, 0, 0)
     duration_str: str = ''
 
@@ -92,7 +90,7 @@ def create_emotion_recognizer() -> FaceEmotionRecognitionNet:
 
 def upload_video() -> [str, VideoData]:
     """Загружает видео."""
-    uploaded_file = st.file_uploader('Загрузка видео', ['mp4', 'avi'], label_visibility='hidden')
+    uploaded_file = st.file_uploader('Загрузка видео', ['mp4', 'avi', 'mov'], label_visibility='hidden')
     return uploaded_file
 
 
@@ -100,7 +98,7 @@ def upload_video() -> [str, VideoData]:
 def save_video(file_name: str, _video_data: VideoData):
     """Сохраняет видео в файл"""
     for file in Path('.').iterdir():
-        if file.suffix in ('.mp4', '.avi'):
+        if file.suffix in ('.mp4', '.avi', '.mov'):
             file.unlink()
     with open(file_name, mode='wb') as video:
         video.write(_video_data)
@@ -117,7 +115,6 @@ def retrieve_video_info(file_name: str) -> VideoInfo:
     video_info.frames_number = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
     video_info.fourcc = int(capture.get(cv2.CAP_PROP_FOURCC))
     capture.release()
-    video_info.fourcc_str = FourCC[video_info.fourcc.to_bytes(4, 'little').decode('ascii')]
     video_info.duration = timedelta(seconds=(video_info.frames_number - 1) / video_info.frame_rate)
     video_info.duration_str = f'{video_info.duration.seconds // 60:02d}:{video_info.duration.seconds % 60:02d}'
     return video_info
