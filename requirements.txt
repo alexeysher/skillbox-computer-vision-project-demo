@@ -1,0 +1,8 @@
+gdown==4.6.4
+keras==2.11.0
+opencv-python==4.6.0.66
+scipy==1.9.3
+statsmodels==0.13.5
+streamlit-option-menu==0.3.2
+streamlit==1.20.0
+tensorflow==2.11.0
