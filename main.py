@@ -319,6 +319,7 @@ def save_trailer(file_name: str, video_info: VideoInfo, fragments: pd.DataFrame)
 
         temp_name = 'temp.mp4'
         trailer_name = Path(file_name).stem + '_trailer.mp4'
+        st.markdown(f'temp_name = "{temp_name}", trailer_name = "{trailer_name}"')
         trailer_writer = cv2.VideoWriter(
             temp_name, video_info.fourcc, video_info.frame_rate,
             (video_info.frame_width, video_info.frame_height))
