@@ -1,4 +1,4 @@
-import io
+import subprocess
 
 import gdown
 from shutil import rmtree
@@ -314,27 +314,32 @@ def display_fragments_table(fragments: pd.DataFrame):
 def save_trailer(file_name: str, video_info: VideoInfo, fragments: pd.DataFrame):
     """Сохраняет трейлер в файл."""
 
-    video_capture = cv2.VideoCapture(file_name)
+    with st.spinner('Сохранение трейлера...'):
+        video_capture = cv2.VideoCapture(file_name)
 
-    trailer_name = Path(file_name).with_stem(Path(file_name).stem + '_trailer').as_posix()
-    trailer_writer = cv2.VideoWriter(
-        trailer_name, video_info.fourcc, video_info.frame_rate,
-        (video_info.frame_width, video_info.frame_height))
+        temp_name = 'temp.mp4'
+        trailer_name = Path(file_name).stem + '_trailer.mp4'
+        trailer_writer = cv2.VideoWriter(
+            temp_name, video_info.fourcc, video_info.frame_rate,
+            (video_info.frame_width, video_info.frame_height))
 
-    trailer_frames_number = (fragments['end_frame'] - fragments['start_frame'] + 1).sum()
-    frames_number = 0
-    empty = st.empty()
-    progress_bar = empty.progress(0.0)
-    for fragment, (start_frame, end_frame) in fragments[['start_frame', 'end_frame']].iterrows():
-        video_capture.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
-        for _ in range(end_frame - start_frame + 1):
-            _, frame = video_capture.read()
-            trailer_writer.write(frame)
-            frames_number += 1
-            progress_bar.progress(frames_number / trailer_frames_number)
-    empty.empty()
-    video_capture.release()
-    trailer_writer.release()
+        trailer_frames_number = (fragments['end_frame'] - fragments['start_frame'] + 1).sum()
+        frames_number = 0
+        empty = st.empty()
+        progress_bar = empty.progress(0.0)
+        for fragment, (start_frame, end_frame) in fragments[['start_frame', 'end_frame']].iterrows():
+            video_capture.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+            for _ in range(end_frame - start_frame + 1):
+                _, frame = video_capture.read()
+                trailer_writer.write(frame)
+                frames_number += 1
+                progress_bar.progress(frames_number / trailer_frames_number)
+        empty.empty()
+        video_capture.release()
+        trailer_writer.release()
+        args = f"ffmpeg -y -i {temp_name} -c:v libx264 {trailer_name}".split(" ")
+        subprocess.call(args=args)
+        Path(temp_name).unlink()
     return trailer_name
 
 
