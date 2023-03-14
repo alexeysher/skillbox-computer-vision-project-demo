@@ -1,6 +1,6 @@
 gdown==4.6.4
 keras==2.11.0
-opencv-python-headless-rolling
+opencv-python-asen
 plotly==5.11.0
 protobuf==3.19.*
 scipy==1.9.3
