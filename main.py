@@ -357,12 +357,12 @@ def main():
     with video_col_1:
         st.markdown('<h3 style="text-align: center;">Видео</h3>', unsafe_allow_html=True)
         uploaded_file = upload_video()
+        st.markdown(f"[Примеры видео...]({st.secrets['video']['url']})")
     with trailer_col_1:
         st.markdown('<h3 style="text-align: center;">Трейлер</h3>', unsafe_allow_html=True)
         st.markdown('<p style="font-size:10px"><br></p>', unsafe_allow_html=True)
         if uploaded_file is None:
             st.info('Необходимо загрузить видео')
-            st.markdown(f"[Примеры видео...](st.secrets['video']['url'])")
             return
     file_name = uploaded_file.name
     video_data = uploaded_file.read()
