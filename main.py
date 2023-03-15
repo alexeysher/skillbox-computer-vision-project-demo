@@ -362,7 +362,7 @@ def main():
         st.markdown('<p style="font-size:10px"><br></p>', unsafe_allow_html=True)
         if uploaded_file is None:
             st.info('Необходимо загрузить видео')
-            st.markdown(st.secrets['video']['url'])
+            st.markdown(f"[Примеры видео...](st.secrets['video']['url'])")
             return
     file_name = uploaded_file.name
     video_data = uploaded_file.read()
