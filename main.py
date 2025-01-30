@@ -78,6 +78,9 @@ def create_face_detector():
 @st.cache_resource(show_spinner='Downloading the emotion recognition model...')
 def create_emotion_recognizer() -> FaceEmotionRecognitionNet:
     """Creates emotion recognition model."""
+    print('!'*100)
+    print(st.secrets['model']['url'])
+    print('!'*100)
     model_zip_path = Path('tmp.zip')
     model_path = Path(MODEL_PATH)
     gdown.cached_download(st.secrets['model']['url'], path=model_zip_path.as_posix(),
