@@ -6,15 +6,15 @@ import numpy as np
 from keras import models
 
 EMOTIONS = {
-    'anger': (-0.41, 0.79),  # гнев, злость
-    'contempt': (-0.57, 0.66),  # презрение
-    'disgust': (-0.67, 0.49),  # отвращение
-    'fear': (-0.12, 0.78),  # страх
-    'happy': (0.9, 0.16),  # веселый
-    'neutral': (0.0, 0.0),  # нейтральный
-    'sad': (-0.82, -0.4),  # грусть
-    'surprise': (0.37, 0.91),  # удивление
-    'uncertain': (-0.5, 0.0),  # неуверенность
+    'anger': (-0.41, 0.79),  # anger, rage
+    'contempt': (-0.57, 0.66),  # contempt
+    'disgust': (-0.67, 0.49),  # disgust
+    'fear': (-0.12, 0.78),  # fear
+    'happy': (0.9, 0.16),  # happiness
+    'neutral': (0.0, 0.0),  # neutral
+    'sad': (-0.82, -0.4),  # sadness
+    'surprise': (0.37, 0.91),  # surprise
+    'uncertain': (-0.5, 0.0),  # uncertain
 }
 
 EmotionPrediction = namedtuple('EmotionPrediction', ['emotion', 'probability'])
@@ -25,10 +25,10 @@ class FaceEmotionRecognitionNet:
 
     def __init__(self, model_path: str, emotions=None):
         """
-        file_path: путь к файлу сохраненной модели.
-        emotions: предсказываемые эмоции.
+        file_path: Path to saved model.
+        emotions: Emotion descriptions.
         """
-        # Загружаем модель
+        # Load model
         if emotions is None:
             emotions = EMOTIONS
         self.__model = models.load_model(filepath=model_path, compile=False)
@@ -42,15 +42,15 @@ class FaceEmotionRecognitionNet:
         """
         image = Image.fromarray(face_image)
         size = max(image.width, image.height)
-        # Делаем изображение квадратным
+        # Padding image to get squared form
         padded_image = ImageOps.pad(image, (size, size))
-        # Подгоняем размер изображения
+        # Resizing image to optimal size
         resized_image = padded_image.resize(self.__model.input_shape[1:3])
-        # Получаем предсказание
+        # Getting a prediction
         tensor = np.asarray(resized_image)[None, ...]
         predicts = self.__model.predict(tensor, verbose=0)[0]
-        # Готовим результирующие данные
         if isinstance(self.__emotions, (list, tuple)):
+            # Готовим результирующие данные
             probability = predicts.max()
             label = predicts.argmax()
             emotion = self.__emotions[label]

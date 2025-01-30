@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 
 from emotion_recognition import FaceEmotionRecognitionNet, EMOTIONS
 
-st.set_page_config(page_title='Создание трейлеров', page_icon=':film_frames:',
+st.set_page_config(page_title='Creating trailers', page_icon=':film_frames:',
                    layout="wide", initial_sidebar_state="expanded")
 
 BACKGROUND_COLOR = 'white'
@@ -24,7 +24,7 @@ COLOR = 'black'
 
 class VideoInfo:
     """
-    Информация о видео.
+    Video info.
     """
     frame_width: int = 0
     frame_height: int = 0
@@ -37,19 +37,19 @@ class VideoInfo:
 
 class VideoData(bytes):
     """
-    Данные видео файла
+    Video data.
     """
 
 
 class HyperParams:
     """
-    Гиперпараметры поиска фрагментов для создания трейлера:
-    tma_window [float] - размер окна усреднения интенсивности эмоций [c]
-    min_arousal [float] - минимальная величина пика эмоций фрагмента
-    min_prominence [float] - минимальный подъем интенсивности эмоций фрагмента
-    min_duration [float] - минимальная длительность фрагмента [c]
-    rel_height [float] - относительная высота 0...1 [доля от подъема]
-    min_distance [float] - минимальное время между фрагментами [c].
+    Hyperparameters for searching fragments to trailer creation:
+    tma_window [float] - time window duration for averaging emotion intensity (arousal) [sec]
+    min_arousal [float] - minimum value of the peak of emotions of a fragment
+    min_prominence [float] - minimal increase in the intensity (arousal) of emotions of a fragment
+    min_duration [float] - minimum fragment duration [sec]
+    rel_height [float] - relative height of rise 0...1
+    min_distance [float] - minimal time between fragments [sec].
     """
     tma_window: float = 0.
     min_arousal: float = 0.
@@ -59,25 +59,25 @@ class HyperParams:
     min_distance: float = 0.
 
 
-MODEL_PATH = 'model'  # Путь к папке сохраненной модели
+MODEL_PATH = 'model'  # Path to saved model
 HAAR_FILE = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
 
-# Настройки детектора лиц
-SCALE_FACTOR = 1.1  # Фактор масштабирования изображения
-MIN_NEIGHBORS = 3  # Минимальное количество соседей
-MIN_FACE_SIZE = 64  # Минимальный размер лица
+# Face detector settings
+SCALE_FACTOR = 1.1  # Scale factor
+MIN_NEIGHBORS = 3  # Min. neighbors number
+MIN_FACE_SIZE = 64  # Min. face size
 
 
-@st.cache_resource(show_spinner="Создание детектора лиц...")
+@st.cache_resource(show_spinner="Creating face detector...")
 def create_face_detector():
-    """Создает детектор лиц."""
+    """Creates face detector."""
     detector = cv2.CascadeClassifier(HAAR_FILE)
     return detector
 
 
-@st.cache_resource(show_spinner='Загрузка модели распознавания эмоций...')
+@st.cache_resource(show_spinner='Downloading the emotion recognition model...')
 def create_emotion_recognizer() -> FaceEmotionRecognitionNet:
-    """Создает модель распознавания эмоций."""
+    """Creates emotion recognition model."""
     model_zip_path = Path('tmp.zip')
     model_path = Path(MODEL_PATH)
     gdown.cached_download(st.secrets['model']['url'], path=model_zip_path.as_posix(),
@@ -89,14 +89,14 @@ def create_emotion_recognizer() -> FaceEmotionRecognitionNet:
 
 
 def upload_video() -> [str, VideoData]:
-    """Загружает видео."""
-    uploaded_file = st.file_uploader('Загрузка видео', ['mp4', 'avi', 'mov'], label_visibility='hidden')
+    """Uploads video file."""
+    uploaded_file = st.file_uploader('Video file uploading', ['mp4', 'avi', 'mov'], label_visibility='hidden')
     return uploaded_file
 
 
 @st.cache_resource
 def save_video(file_name: str, _video_data: VideoData):
-    """Сохраняет видео в файл"""
+    """Saves video data to file"""
     for file in Path('.').iterdir():
         if file.suffix in ('.mp4', '.avi', '.mov'):
             file.unlink()
@@ -106,7 +106,7 @@ def save_video(file_name: str, _video_data: VideoData):
 
 @st.cache_resource
 def retrieve_video_info(file_name: str) -> VideoInfo:
-    """Извлекает из файла информацию о видео."""
+    """Extracts info about video data from the file."""
     video_info = VideoInfo()
     capture = cv2.VideoCapture(file_name)
     video_info.frame_width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -120,13 +120,13 @@ def retrieve_video_info(file_name: str) -> VideoInfo:
     return video_info
 
 
-@st.cache_data(show_spinner='Распознавание эмоций...')
+@st.cache_data(show_spinner='Emotion recognition...')
 def recognize_video_emotions(file_name: str, _video_info: VideoInfo, _face_detector,
                              _emotion_recognizer: FaceEmotionRecognitionNet) -> [float]:
-    """Распознает интенсивность эмоций в каждом кадре видео."""
+    """Recognize intensity (arousal) of the emotions in each video frame."""
 
     def extract_face(frame, detector):
-        """Извлекает лицо из кадра."""
+        """Extracts a face from the frame."""
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces_rect = detector.detectMultiScale(gray_frame, SCALE_FACTOR, MIN_NEIGHBORS, 0,
                                                (MIN_FACE_SIZE, MIN_FACE_SIZE))
@@ -160,20 +160,20 @@ def recognize_video_emotions(file_name: str, _video_info: VideoInfo, _face_detec
 
 
 def set_hyperparams() -> HyperParams:
-    """Задание гиперпараметров подбора фрагментов для создания трейлера."""
+    """Sets up hyperparameters for fragments searching."""
     hyperparams = HyperParams()
-    hyperparams.tma_window = st.slider('Размер окна TMA [с]', 0.05, 2.0, 1.0, 0.05)
-    hyperparams.min_arousal = st.slider('Мин. значение пика', 0.0, 1.0, 0.5, 0.05)
-    hyperparams.min_prominence = st.slider('Мин. подъем', 0.0, 0.5, 0.25, 0.05)
-    hyperparams.min_duration = st.slider('Мин. длительность [c]', 0.0, 2.0, 1.0, 0.05)
-    hyperparams.rel_height = st.slider('Отн. высота границ', 0.0, 1.0, 0.5, 0.05)
-    hyperparams.min_distance = st.slider('Мин. дистанция [c]', 0.5, 10.0, 5.0, 0.5)
+    hyperparams.tma_window = st.slider('Intensity averaging time window [sec]', 0.05, 2.0, 1.0, 0.05)
+    hyperparams.min_arousal = st.slider('Intensity peak min. value', 0.0, 1.0, 0.5, 0.05)
+    hyperparams.min_prominence = st.slider('Intensity prominence min. value', 0.0, 0.5, 0.25, 0.05)
+    hyperparams.min_duration = st.slider('Min. fragment duration [sec]', 0.0, 2.0, 1.0, 0.05)
+    hyperparams.rel_height = st.slider('Intensity min. height value', 0.0, 1.0, 0.5, 0.05)
+    hyperparams.min_distance = st.slider('Min. distance between fragments [sec]', 0.5, 10.0, 5.0, 0.5)
     return hyperparams
 
 
 def find_fragments(file_name: str, hyperparams: HyperParams, video_info: VideoInfo, arousals: []) -> \
         (pd.DataFrame, pd.DataFrame):
-    """Поиск фрагментов для трейлера в видео."""
+    """Searching video fragments for the trailer."""
 
     today = date.today()
     start_date = datetime(today.year, today.month, today.day)
@@ -210,13 +210,13 @@ def find_fragments(file_name: str, hyperparams: HyperParams, video_info: VideoIn
 
 
 def plot_chart(trend: pd.DataFrame, fragments: pd.DataFrame):
-    """Вывод графиков."""
-    st.markdown('##### Динамика интенсивности эмоций')
+    """Diagrams output."""
+    st.markdown('##### Intensity dynamic')
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
             x=trend['time'], y=trend['arousal'],
-            mode='lines', name='Интенсивность',
+            mode='lines', name='Intensity',
             line={'width': 1, 'shape': 'spline', 'color': px.colors.qualitative.Prism[7]},
             opacity=0.5
         )
@@ -250,7 +250,7 @@ def plot_chart(trend: pd.DataFrame, fragments: pd.DataFrame):
     fig.add_trace(
         go.Scatter(
             x=trend['time'], y=trend['arousal_tma'],
-            mode='lines', name='TMA интенсивность',
+            mode='lines', name='Average intensity',
             line={'width': 2, 'shape': 'spline', 'color': px.colors.qualitative.Prism[4]},
             opacity=0.9
         )
@@ -258,7 +258,7 @@ def plot_chart(trend: pd.DataFrame, fragments: pd.DataFrame):
     fig.add_trace(
         go.Scatter(
             x=fragments['start_time'], y=fragments['start_arousal'],
-            mode='markers', name='Начало фрагмента',
+            mode='markers', name='Fragment start',
             marker={
                 'symbol': 'line-nw-open',
                 'size': 6, 'color': px.colors.qualitative.Prism[4],
@@ -269,7 +269,7 @@ def plot_chart(trend: pd.DataFrame, fragments: pd.DataFrame):
     fig.add_trace(
         go.Scatter(
             x=fragments['end_time'], y=fragments['end_arousal'],
-            mode='markers', name='Конец фрагмента',
+            mode='markers', name='Fragment end',
             marker={
                 'symbol': 'line-ne-open',
                 'size': 6, 'color': px.colors.qualitative.Prism[4],
@@ -280,7 +280,7 @@ def plot_chart(trend: pd.DataFrame, fragments: pd.DataFrame):
     fig.add_trace(
         go.Scatter(
             x=fragments['peak_time'], y=fragments['peak_arousal'],
-            mode='markers', name='Пик интенсивности',
+            mode='markers', name='Intensity peak',
             marker={
                 'symbol': 'line-ns-open',
                 'size': 6, 'color': px.colors.qualitative.Prism[4],
@@ -294,8 +294,8 @@ def plot_chart(trend: pd.DataFrame, fragments: pd.DataFrame):
 
 
 def display_fragments_table(fragments: pd.DataFrame):
-    """Отображает таблицу с фрагментами."""
-    st.markdown('##### Отобранные фрагменты')
+    """Outputs the fragments list."""
+    st.markdown('##### Fragments')
     for _ in range(3):
         st.markdown('')
     df = fragments[['start_time', 'end_time']]
@@ -305,16 +305,16 @@ def display_fragments_table(fragments: pd.DataFrame):
                        (df['start_time'].dt.microsecond // 1000).apply(str)
     df['end_time'] = df['end_time'].dt.strftime('%M:%S') + '.' + \
                      (df['end_time'].dt.microsecond // 1000).apply(str)
-    df.rename(columns={'start_time': 'Начало', 'end_time': 'Конец', 'duration': 'Длительность [c]', }, inplace=True)
+    df.rename(columns={'start_time': 'Start', 'end_time': 'End', 'duration': 'Duration [sec]', }, inplace=True)
     df.index = range(1, df.shape[0] + 1)
-    df.index.name = 'Номер'
+    df.index.name = 'Number'
     st.table(df)
 
 
 def save_trailer(file_name: str, video_info: VideoInfo, fragments: pd.DataFrame):
-    """Сохраняет трейлер в файл."""
+    """Saves the trailer to a file."""
 
-    with st.spinner('Сохранение трейлера...'):
+    with st.spinner('Trailer saving...'):
         video_capture = cv2.VideoCapture(file_name)
 
         temp_name = 'temp.mp4'
@@ -344,25 +344,25 @@ def save_trailer(file_name: str, video_info: VideoInfo, fragments: pd.DataFrame)
 
 
 def download_trailer(trailer_name: str):
-    """Скачивание файла трейлера."""
+    """The trailer file downloading."""
     with open(trailer_name, mode='rb') as trailer_file:
-        st.download_button('Скачать трейлер...', trailer_file, trailer_name, 'video' + Path(trailer_name).suffix[1:])
+        st.download_button('Download the trailer...', trailer_file, trailer_name, 'video' + Path(trailer_name).suffix[1:])
 
 
 def main():
     face_detector = create_face_detector()
     emotion_recognizer = create_emotion_recognizer()
-    # st.markdown('<h2 style="text-align: center;">Создание трейлеров</h2>', unsafe_allow_html=True)
+    # st.markdown('<h2 style="text-align: center;">Trailer creation</h2>', unsafe_allow_html=True)
     video_col_1, trailer_col_1 = st.columns(2, gap='large')
     with video_col_1:
-        st.markdown('<h3 style="text-align: center;">Видео</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 style="text-align: center;">Video</h3>', unsafe_allow_html=True)
         uploaded_file = upload_video()
-        st.markdown(f"[Примеры видео...]({st.secrets['video']['url']})")
+        st.markdown(f"[Video files...]({st.secrets['video']['url']})")
     with trailer_col_1:
-        st.markdown('<h3 style="text-align: center;">Трейлер</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 style="text-align: center;">Trailer</h3>', unsafe_allow_html=True)
         st.markdown('<p style="font-size:10px"><br></p>', unsafe_allow_html=True)
         if uploaded_file is None:
-            st.info('Необходимо загрузить видео')
+            st.info('Video needs to be uploaded')
             return
     file_name = uploaded_file.name
     video_data = uploaded_file.read()
@@ -381,7 +381,7 @@ def main():
         plot_chart(trend, fragments)
     with trailer_col_1:
         if fragments.empty:
-            st.warning('Не найдено ни одного фрагмента')
+            st.warning('No fragment is found')
             return
     with trailer_col_2:
         trailer_name = save_trailer(file_name, video_info, fragments)
