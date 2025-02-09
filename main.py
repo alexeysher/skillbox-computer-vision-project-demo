@@ -604,6 +604,7 @@ if __name__ == '__main__':
     show_title_and_help()
     st.markdown('')
     face_detector = create_face_detector()
+    print('face_detector')
     # emotion_recognizer = create_emotion_recognizer()
     video_col_1, trailer_col_1 = st.columns(2, gap='large')
     video_col_2, trailer_col_2 = st.columns(2, gap='large')
