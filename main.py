@@ -165,6 +165,7 @@ def create_emotion_recognizer(
         gc_file_path: str | PathLike = GC_MODEL_PATH, file_path: str | PathLike = MODEL_PATH,
         emotions=EMOTIONS) -> FaceEmotionRecognitionNet | None:
     """Creates emotion recognition model."""
+    print(f'create_emotion_recognizer: {gc_file_path=}')
     key = 'emotion_recognizer'
     if key in st.session_state:
         return st.session_state[key]
