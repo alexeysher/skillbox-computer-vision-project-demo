@@ -1,9 +1,12 @@
+import os
+from collections import namedtuple
 from typing import Union
 
-from collections import namedtuple
-from PIL import Image, ImageOps
 import numpy as np
-from keras import models
+from PIL import Image, ImageOps
+
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
+from tf_keras import models
 
 EMOTIONS = {
     'anger': (-0.41, 0.79),  # anger, rage
@@ -31,13 +34,13 @@ class FaceEmotionRecognitionNet:
         # Load model
         if emotions is None:
             emotions = EMOTIONS
-        self.__model = models.load_model(filepath=model_path, compile=False)
+        self.__model = models.load_model(filepath=model_path, compile=False, safe_mode=False)
         self.__emotions = emotions
 
     def predict(self, face_image: np.array) -> Union[EmotionPrediction, ValenceArousalPrediction]:
         """Предсказание эмоции человека по изображению его лица.
 
-        Аргументы:
+        Arguments:
         - face_image: изображение лица человека.
         """
         image = Image.fromarray(face_image)
