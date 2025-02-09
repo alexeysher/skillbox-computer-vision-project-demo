@@ -32,6 +32,7 @@ class FaceEmotionRecognitionNet:
         emotions: Emotion descriptions.
         """
         # Load model
+        print('loading model...')
         if emotions is None:
             emotions = EMOTIONS
         self.__model = models.load_model(filepath=model_path, compile=False, safe_mode=False)
