@@ -604,7 +604,7 @@ if __name__ == '__main__':
     show_title_and_help()
     st.markdown('')
     face_detector = create_face_detector()
-    emotion_recognizer = create_emotion_recognizer()
+    # emotion_recognizer = create_emotion_recognizer()
     video_col_1, trailer_col_1 = st.columns(2, gap='large')
     video_col_2, trailer_col_2 = st.columns(2, gap='large')
     video_col_3, trailer_col_3 = st.columns(2, gap='large')
@@ -615,51 +615,51 @@ if __name__ == '__main__':
         st.markdown('<p style="font-size:10px"><br></p>', unsafe_allow_html=True)
     with video_col_1:
         uploaded_video = upload_video()
-    if uploaded_video is None:
-        with trailer_col_1:
-            st.info('Video have to be uploaded', icon=":material/info:")
-            st.session_state['initial_hyperparams'] = None
-    else:
-        if st.session_state['video_uploader_changed']:
-            st.session_state['video_uploader_changed'] = False
-            video_data = uploaded_video.read()
-            video_id = VideoId()
-            video_id.file_name = uploaded_video.name
-            video_id.md5 = compute_video_hash(video_data)
-            video_id.id = f'{Path(video_id.file_name).stem}_{video_id.md5}'
-            st.session_state['video_id'] = video_id
-            save_video(video_id, video_data)
-            video_info = retrieve_video_info(video_id)
-            st.session_state['video_info'] = video_info
-            arousals = get_arousals(video_id, video_info, face_detector, emotion_recognizer)
-            st.session_state['arousals'] = arousals
-            initial_hyperparams = init_hyperparams(video_id)
-            st.session_state['initial_hyperparams'] = initial_hyperparams
-        else:
-            video_id = st.session_state['video_id']
-            video_info = st.session_state['video_info']
-            arousals = st.session_state['arousals']
-            initial_hyperparams = st.session_state['initial_hyperparams']
-        with video_col_2:
-            st.video(video_id.file_name)
-        hyperparams = set_hyperparams(video_id, initial_hyperparams)
-        if st.session_state['tma_window_changed']:
-            st.session_state['tma_window_changed'] = False
-            trend = fit_intensity_curve(arousals, hyperparams.tma_window, video_info)
-            st.session_state['trend'] = trend
-        else:
-            trend = st.session_state['trend']
-        fragments = find_fragments(trend, hyperparams, video_info)
-        with video_col_3:
-            plot_chart(trend, fragments)
-        if fragments.empty:
-            with trailer_col_1:
-                st.warning('No fragment is found', icon=":material/warning:")
-        else:
-            trailer_name = save_trailer(video_id, video_info, fragments)
-            with trailer_col_1:
-                download_trailer(trailer_name)
-            with trailer_col_2:
-                st.video(trailer_name)
-            with trailer_col_3:
-                display_fragments_table(fragments)
+    # if uploaded_video is None:
+    #     with trailer_col_1:
+    #         st.info('Video have to be uploaded', icon=":material/info:")
+    #         st.session_state['initial_hyperparams'] = None
+    # else:
+    #     if st.session_state['video_uploader_changed']:
+    #         st.session_state['video_uploader_changed'] = False
+    #         video_data = uploaded_video.read()
+    #         video_id = VideoId()
+    #         video_id.file_name = uploaded_video.name
+    #         video_id.md5 = compute_video_hash(video_data)
+    #         video_id.id = f'{Path(video_id.file_name).stem}_{video_id.md5}'
+    #         st.session_state['video_id'] = video_id
+    #         save_video(video_id, video_data)
+    #         video_info = retrieve_video_info(video_id)
+    #         st.session_state['video_info'] = video_info
+    #         arousals = get_arousals(video_id, video_info, face_detector, emotion_recognizer)
+    #         st.session_state['arousals'] = arousals
+    #         initial_hyperparams = init_hyperparams(video_id)
+    #         st.session_state['initial_hyperparams'] = initial_hyperparams
+    #     else:
+    #         video_id = st.session_state['video_id']
+    #         video_info = st.session_state['video_info']
+    #         arousals = st.session_state['arousals']
+    #         initial_hyperparams = st.session_state['initial_hyperparams']
+    #     with video_col_2:
+    #         st.video(video_id.file_name)
+    #     hyperparams = set_hyperparams(video_id, initial_hyperparams)
+    #     if st.session_state['tma_window_changed']:
+    #         st.session_state['tma_window_changed'] = False
+    #         trend = fit_intensity_curve(arousals, hyperparams.tma_window, video_info)
+    #         st.session_state['trend'] = trend
+    #     else:
+    #         trend = st.session_state['trend']
+    #     fragments = find_fragments(trend, hyperparams, video_info)
+    #     with video_col_3:
+    #         plot_chart(trend, fragments)
+    #     if fragments.empty:
+    #         with trailer_col_1:
+    #             st.warning('No fragment is found', icon=":material/warning:")
+    #     else:
+    #         trailer_name = save_trailer(video_id, video_info, fragments)
+    #         with trailer_col_1:
+    #             download_trailer(trailer_name)
+    #         with trailer_col_2:
+    #             st.video(trailer_name)
+    #         with trailer_col_3:
+    #             display_fragments_table(fragments)
