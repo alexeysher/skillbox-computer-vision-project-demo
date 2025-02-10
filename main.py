@@ -14,7 +14,6 @@ import streamlit as st
 from google.cloud import storage
 from google.cloud import aiplatform
 from scipy.signal import find_peaks
-from urllib3.util import current_time
 
 #
 # from emotion_recognition import FaceEmotionRecognitionNet, EMOTIONS
