@@ -1,20 +1,24 @@
 import hashlib
 import pickle
 import subprocess
+import time
 from datetime import timedelta, datetime, date
 from os import PathLike
 from pathlib import Path
-from zipfile import ZipFile
 
 import cv2
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from google.cloud import storage
+from google.cloud import aiplatform
 from scipy.signal import find_peaks
+from urllib3.util import current_time
 
-from emotion_recognition import FaceEmotionRecognitionNet, EMOTIONS
+#
+# from emotion_recognition import FaceEmotionRecognitionNet, EMOTIONS
 
 st.set_page_config(page_title='Creating trailers', page_icon=':film_frames:',
                    layout="wide", initial_sidebar_state="expanded")
@@ -29,15 +33,13 @@ MIN_NEIGHBORS = 3  # Min. neighbors number
 MIN_FACE_SIZE = 64  # Min. face size
 
 # Google Cloud Storage
-GC_PROJECT = st.secrets['gcs']['project']  # Project name
-GC_BUCKET = st.secrets['gcs']['bucket']  # Bucket name
-GC_MODEL_PATH = 'final_model.tf.zip'  # Model file path
+GC_PROJECT_ID = st.secrets['gcs']['project_id']  # Project id
+GC_BUCKET_ID = st.secrets['gcs']['bucket_id']  # Bucket id
+GC_ENDPOINT_ID = st.secrets['gcs']['endpoint_id'] # Endpoint id
 GC_AROUSALS_PATH = 'arousals'  # Processed video arousals folder path
 GC_HYPERPARAMS_PATH = 'hyperparams'  # Processed video hyperparams folder path
 
 # Local
-MODEL_PATH = 'final_model.tf'  # Model file path
-VIDEO_LIST_PATH = 'processed_videos.csv'  # Processed video list path
 AROUSALS_PATH = 'arousals.dat'  # Arousals file path
 HYPERPARAMS_PATH = 'hyperparams.dat'  # Processed video hyperparams folder path
 
@@ -51,13 +53,13 @@ class VideoId:
 class VideoInfo:
     """
     Video info:
-    frame_width [int] - time window duration for averaging emotion intensity (arousal) [sec]
-    frame_height [int] - minimum value of the peak of emotions of a fragment
-    frame_rate [float] - minimal increase in the intensity (arousal) of emotions of a fragment
-    frames_number [int] - minimum fragment duration [sec]
-    fourcc [float] - relative height of rise 0...1
-    duration [timedelta] - minimal time between fragments [sec].
-    duration_str [str]
+    frame_width [int] -
+    frame_height [int] -
+    frame_rate [float] -
+    frames_number [int] -
+    fourcc [float] -
+    duration [timedelta] -
+    duration_str [str] -
     """
     frame_width: int = 0
     frame_height: int = 0
@@ -119,7 +121,7 @@ def create_face_detector(_haar_file_name: str = HAAR_FILE) -> cv2.CascadeClassif
     return st.session_state[key]
 
 
-def create_gc_blob(file_path: str | PathLike, project: str = GC_PROJECT, bucket: str = GC_BUCKET):
+def create_gc_blob(file_path: str | PathLike, project: str = GC_PROJECT_ID, bucket: str = GC_BUCKET_ID):
     """
     Creates blob for file operations with file on GC.
     """
@@ -161,26 +163,44 @@ def upload_file_to_gc(gc_file_path: str | PathLike, file_path: str | PathLike) -
     return True
 
 
-def create_emotion_recognizer(
-        gc_file_path: str | PathLike = GC_MODEL_PATH, file_path: str | PathLike = MODEL_PATH,
-        emotions=EMOTIONS) -> FaceEmotionRecognitionNet | None:
+# def create_emotion_recognizer(
+#         gc_file_path: str | PathLike = GC_MODEL_PATH, file_path: str | PathLike = MODEL_PATH,
+#         emotions=EMOTIONS) -> FaceEmotionRecognitionNet | None:
+#     """Creates emotion recognition model."""
+#     print(f'create_emotion_recognizer: {gc_file_path=}')
+#     key = 'emotion_recognizer'
+#     if key in st.session_state:
+#         return st.session_state[key]
+#     with st.spinner('Creating the emotion recognition model...'):
+#         st.session_state[key] = None
+#         try:
+#             assert download_file_from_gc(gc_file_path, 'temp.zip')
+#             with ZipFile('temp.zip') as zipfile:
+#                 zipfile.extractall(file_path)
+#             Path('temp.zip').unlink()
+#             st.session_state[key] = FaceEmotionRecognitionNet(file_path, emotions)
+#         except Exception as e:
+#             st.write(e)
+#             st.session_state[key] = None
+#             st.error('Failed to create emotion recognition model', icon=':material/error:')
+#     return st.session_state[key]
+
+
+def create_emotion_recognizer_endpoint(
+        gc_project: str = GC_PROJECT_ID, gc_endpoint: str = GC_ENDPOINT_ID) -> aiplatform.Endpoint | None:
     """Creates emotion recognition model."""
-    print(f'create_emotion_recognizer: {gc_file_path=}')
-    key = 'emotion_recognizer'
+    key = 'emotion_recognizer_endpoint'
     if key in st.session_state:
         return st.session_state[key]
-    with st.spinner('Creating the emotion recognition model...'):
+    with st.spinner('Creating the emotion recognition model endpoint...'):
         st.session_state[key] = None
         try:
-            assert download_file_from_gc(gc_file_path, 'temp.zip')
-            with ZipFile('temp.zip') as zipfile:
-                zipfile.extractall(file_path)
-            Path('temp.zip').unlink()
-            st.session_state[key] = FaceEmotionRecognitionNet(file_path, emotions)
+            endpoint_name = f'projects/{gc_project}/locations/us-central1/endpoints/{gc_endpoint}'
+            st.session_state[key] = aiplatform.Endpoint(endpoint_name=endpoint_name)
         except Exception as e:
             st.write(e)
             st.session_state[key] = None
-            st.error('Failed to create emotion recognition model', icon=':material/error:')
+            st.error('Failed to create emotion recognition model endpoint', icon=':material/error:')
     return st.session_state[key]
 
 
@@ -228,8 +248,49 @@ def retrieve_video_info(video_id: VideoId) -> VideoInfo:
     return video_info
 
 
-def recognize_video_emotions(video_id: VideoId, _video_info: VideoInfo, _face_detector: cv2.CascadeClassifier,
-                             _emotion_recognizer: FaceEmotionRecognitionNet) -> [float]:
+# def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_detector: cv2.CascadeClassifier,
+#                              emotion_recognizer: FaceEmotionRecognitionNet) -> [float]:
+#     """Recognize intensity (arousal) of the emotions in each video frame."""
+#
+#     def _extract_face(frame, detector):
+#         """Extracts a face from the frame."""
+#         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#         face_rects = detector.detectMultiScale(gray_frame, SCALE_FACTOR, MIN_NEIGHBORS, 0,
+#                                                (MIN_FACE_SIZE, MIN_FACE_SIZE))
+#         if len(face_rects) == 0:
+#             return
+#         x = y = w = h = 0
+#         for face_rect in face_rects:
+#             if face_rect[2] > w and face_rect[3] > h:
+#                 x, y, w, h = face_rect
+#         face = cv2.cvtColor(image[y:y + h, x:x + w], cv2.COLOR_BGR2RGB)
+#         return face
+#
+#     video_capture = cv2.VideoCapture(video_id.file_name)
+#     frame_index = 0
+#     faces_number = 0
+#     arousal = 0.0
+#     arousals = []
+#     empty = st.empty()
+#     progress_bar = empty.progress(0.0)
+#     while True:
+#         ret, image = video_capture.read()
+#         if not ret:
+#             break
+#         face_image = _extract_face(image, face_detector)
+#         if face_image is not None:
+#             faces_number += 1
+#             arousal = emotion_recognizer.predict(face_image)[-1]
+#         arousals.append(arousal)
+#         frame_index += 1
+#         progress_bar.progress(frame_index / video_info.frames_number)
+#     video_capture.release()
+#     empty.empty()
+#     return arousals
+
+
+def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_detector: cv2.CascadeClassifier,
+                             emotion_recognizer_endpoint: aiplatform.Endpoint) -> [float]:
     """Recognize intensity (arousal) of the emotions in each video frame."""
 
     def _extract_face(frame, detector):
@@ -244,7 +305,7 @@ def recognize_video_emotions(video_id: VideoId, _video_info: VideoInfo, _face_de
             if face_rect[2] > w and face_rect[3] > h:
                 x, y, w, h = face_rect
         face = cv2.cvtColor(image[y:y + h, x:x + w], cv2.COLOR_BGR2RGB)
-        return face
+        return np.asarray(face).tolist()
 
     video_capture = cv2.VideoCapture(video_id.file_name)
     frame_index = 0
@@ -252,28 +313,66 @@ def recognize_video_emotions(video_id: VideoId, _video_info: VideoInfo, _face_de
     arousal = 0.0
     arousals = []
     empty = st.empty()
+    iter_size = 10
+    iter_number = video_info.frames_number / iter_size
+    iter_index = 0
     progress_bar = empty.progress(0.0)
+    start_time = datetime.now()
     while True:
         ret, image = video_capture.read()
+        if frame_index % 10 > 0:
+            frame_index += 1
+            continue
         if not ret:
             break
-        face_image = _extract_face(image, _face_detector)
+        face_image = _extract_face(image, face_detector)
         if face_image is not None:
             faces_number += 1
-            arousal = _emotion_recognizer.predict(face_image)[-1]
+            arousal = emotion_recognizer_endpoint.predict(instances=[face_image], use_dedicated_endpoint=True)[-1]
         arousals.append(arousal)
         frame_index += 1
-        progress_bar.progress(frame_index / _video_info.frames_number)
+        iter_index += 1
+        current_time = datetime.now()
+        elapsed_time = current_time - start_time
+        elapsed_time_str = str(elapsed_time).split('.')[0]
+        left_time = (elapsed_time / iter_index) * (iter_number - iter_index)
+        left_time_str = str(left_time).split('.')[0]
+        percent = iter_index / iter_number
+        progress_bar.progress(
+           percent,
+            f'{percent:.0%} [Elapsed time: {elapsed_time_str}, Left time: {left_time_str}]'
+        )
     video_capture.release()
     empty.empty()
     return arousals
 
 
+# def get_arousals(
+#         video_id: VideoId, video_info: VideoInfo,
+#         face_detector: cv2.CascadeClassifier, emotion_recognizer: FaceEmotionRecognitionNet,
+#         gc_folder_path: str | PathLike = GC_AROUSALS_PATH, file_name: str | PathLike = AROUSALS_PATH) -> list[float]:
+#     with st.spinner('Emotion recognition...'):
+#         if isinstance(gc_folder_path, str):
+#             gc_folder_path = Path(gc_folder_path)
+#         gc_file_path = gc_folder_path / f'{video_id.id}.dat'
+#         if download_file_from_gc(gc_file_path, file_name):
+#             with open(file_name, 'rb') as f:
+#                 arousals = pickle.load(f)
+#             return arousals
+#         arousals = recognize_video_emotions(video_id, video_info, face_detector, emotion_recognizer)
+#         with open(file_name, 'wb') as f:
+#             pickle.dump(arousals, f)
+#         upload_file_to_gc(gc_file_path, file_name)
+#     return arousals
+#
+#
+
+
 def get_arousals(
         video_id: VideoId, video_info: VideoInfo,
-        face_detector: cv2.CascadeClassifier, emotion_recognizer: FaceEmotionRecognitionNet,
+        face_detector: cv2.CascadeClassifier, emotion_recognizer_endpoint: aiplatform.Endpoint,
         gc_folder_path: str | PathLike = GC_AROUSALS_PATH, file_name: str | PathLike = AROUSALS_PATH) -> list[float]:
-    with st.spinner('Emotion recognition...'):
+    with st.spinner('Recognizing emotions intensity...'):
         if isinstance(gc_folder_path, str):
             gc_folder_path = Path(gc_folder_path)
         gc_file_path = gc_folder_path / f'{video_id.id}.dat'
@@ -281,7 +380,7 @@ def get_arousals(
             with open(file_name, 'rb') as f:
                 arousals = pickle.load(f)
             return arousals
-        arousals = recognize_video_emotions(video_id, video_info, face_detector, emotion_recognizer)
+        arousals = recognize_video_emotions(video_id, video_info, face_detector, emotion_recognizer_endpoint)
         with open(file_name, 'wb') as f:
             pickle.dump(arousals, f)
         upload_file_to_gc(gc_file_path, file_name)
@@ -604,7 +703,8 @@ if __name__ == '__main__':
     show_title_and_help()
     st.markdown('')
     face_detector = create_face_detector()
-    emotion_recognizer = create_emotion_recognizer()
+    emotion_recognizer_endpoint = create_emotion_recognizer_endpoint()
+    # emotion_recognizer = create_emotion_recognizer()
     video_col_1, trailer_col_1 = st.columns(2, gap='large')
     video_col_2, trailer_col_2 = st.columns(2, gap='large')
     video_col_3, trailer_col_3 = st.columns(2, gap='large')
@@ -631,7 +731,8 @@ if __name__ == '__main__':
             save_video(video_id, video_data)
             video_info = retrieve_video_info(video_id)
             st.session_state['video_info'] = video_info
-            arousals = get_arousals(video_id, video_info, face_detector, emotion_recognizer)
+            with video_col_2:
+                arousals = get_arousals(video_id, video_info, face_detector, emotion_recognizer_endpoint)
             st.session_state['arousals'] = arousals
             initial_hyperparams = init_hyperparams(video_id)
             st.session_state['initial_hyperparams'] = initial_hyperparams
