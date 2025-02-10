@@ -1,7 +1,6 @@
 import hashlib
 import pickle
 import subprocess
-import time
 from datetime import timedelta, datetime, date
 from os import PathLike
 from pathlib import Path
