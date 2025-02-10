@@ -185,7 +185,7 @@ def upload_file_to_gc(gc_file_path: str | PathLike, file_path: str | PathLike) -
 
 
 def create_emotion_recognizer_endpoint(
-        gc_project: str = GC_PROJECT_ID, gc_endpoint: str = GC_ENDPOINT_ID) -> aiplatform.Endpoint | None:
+        gc_project_id: str = GC_PROJECT_ID, gc_endpoint_id: str = GC_ENDPOINT_ID) -> aiplatform.Endpoint | None:
     """Creates emotion recognition model."""
     key = 'emotion_recognizer_endpoint'
     if key in st.session_state:
@@ -193,7 +193,8 @@ def create_emotion_recognizer_endpoint(
     with st.spinner('Creating the emotion recognition model endpoint...'):
         st.session_state[key] = None
         try:
-            endpoint_name = f'projects/{gc_project}/locations/us-central1/endpoints/{gc_endpoint}'
+            endpoint_name = f'projects/{gc_project_id}/locations/us-central1/endpoints/{gc_endpoint_id}'
+            st.write(endpoint_name)
             st.session_state[key] = aiplatform.Endpoint(endpoint_name=endpoint_name)
         except Exception as e:
             st.write(e)
