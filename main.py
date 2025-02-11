@@ -32,9 +32,10 @@ MIN_NEIGHBORS = 3  # Min. neighbors number
 MIN_FACE_SIZE = 64  # Min. face size
 
 # Google Cloud Storage
-GC_PROJECT_ID = st.secrets['gcs']['project_id']  # Project id
-GC_BUCKET_ID = st.secrets['gcs']['bucket_id']  # Bucket id
-GC_ENDPOINT_ID = st.secrets['gcs']['endpoint_id'] # Endpoint id
+GC_PROJECT_ID = st.secrets['gc-service-account']['project_id'] # Project id
+GC_BUCKET_ID = st.secrets['gc-storage']['bucket_id'] # Bucket id
+GC_LOCATION_ID = st.secrets['gc-aiplatform']['location_id'] # Location id
+GC_ENDPOINT_ID = st.secrets['gc-aiplatform']['endpoint_id'] # Endpoint id
 GC_AROUSALS_PATH = 'arousals'  # Processed video arousals folder path
 GC_HYPERPARAMS_PATH = 'hyperparams'  # Processed video hyperparams folder path
 
@@ -106,56 +107,62 @@ class HyperParams:
         )
 
 
-def create_face_detector(_haar_file_name: str = HAAR_FILE) -> cv2.CascadeClassifier | None:
-    """Creates face detector."""
-    key = 'face_detector'
-    if key in st.session_state:
-        return st.session_state[key]
-    with st.spinner('Creating face detector...'):
-        try:
-            st.session_state[key] = cv2.CascadeClassifier(cv2.data.haarcascades + _haar_file_name)
-        except:
-            st.session_state[key] = None
-            st.error('Failed to create face detector', icon=':material/error:')
-    return st.session_state[key]
+def create_gc_credentials():
+    connection_info = st.secrets["gcs_credentials"]
+    credentials = service_account.Credentials.from_service_account_info(connection_info)
+    return credentials
 
 
-def create_gc_blob(file_path: str | PathLike, project: str = GC_PROJECT_ID, bucket: str = GC_BUCKET_ID):
+def connect_to_gc_storage_bucket(
+        project_id: str = GC_PROJECT_ID,
+        bucket_id: str = GC_BUCKET_ID,
+        credentials: service_account.Credentials = None
+) -> storage.Bucket:
+    storage_client = storage.Client(project_id, credentials=credentials)
+    bucket = storage_client.bucket(bucket_id)
+    return bucket
+
+
+def init_aiplatform(project_id: str = GC_PROJECT_ID, location_id: str = GC_LOCATION_ID, credentials=None):
+    aiplatform.init(project=project_id, location=location_id, credentials=credentials)
+
+
+def create_gc_blob(bucket: storage.Bucket, file_path: str | PathLike):
     """
     Creates blob for file operations with file on GC.
     """
     if isinstance(file_path, Path):
         file_path = file_path.as_posix()
-    storage_client = storage.Client(project)
-    bucket = storage_client.bucket(bucket)
     blob = bucket.blob(file_path)
     return blob
 
 
-def download_file_from_gc(gc_file_path: str | PathLike, file_path: str | PathLike) -> bool:
+def download_file_from_gc(
+        bucket: storage.Bucket, file_path: str | PathLike,
+        downloaded_file_path: str | PathLike) -> bool:
     """
     Downloads file from GC.
     """
-    if isinstance(file_path, Path):
-        file_path = file_path.as_posix()
-    blob = create_gc_blob(gc_file_path)
+    if isinstance(downloaded_file_path, Path):
+        downloaded_file_path = downloaded_file_path.as_posix()
+    blob = create_gc_blob(bucket, file_path)
     try:
-        blob.download_to_filename(file_path)
+        blob.download_to_filename(downloaded_file_path)
     except Exception as e:
         print(e)
         return False
     return True
 
 
-def upload_file_to_gc(gc_file_path: str | PathLike, file_path: str | PathLike) -> bool:
+def upload_file_to_gc(bucket: storage.Bucket, file_path: str | PathLike, uploading_file_path: str | PathLike) -> bool:
     """
     Uploads file to GC.
     """
-    if isinstance(file_path, Path):
-        file_path = file_path.as_posix()
-    blob = create_gc_blob(gc_file_path)
+    if isinstance(uploading_file_path, Path):
+        uploading_file_path = uploading_file_path.as_posix()
+    blob = create_gc_blob(bucket, file_path)
     try:
-        blob.upload_from_filename(file_path)
+        blob.upload_from_filename(uploading_file_path)
     except Exception as e:
         print(e)
         return False
@@ -185,6 +192,20 @@ def upload_file_to_gc(gc_file_path: str | PathLike, file_path: str | PathLike) -
 #     return st.session_state[key]
 
 
+def create_face_detector(_haar_file_name: str = HAAR_FILE) -> cv2.CascadeClassifier | None:
+    """Creates face detector."""
+    key = 'face_detector'
+    if key in st.session_state:
+        return st.session_state[key]
+    with st.spinner('Creating face detector...'):
+        try:
+            st.session_state[key] = cv2.CascadeClassifier(cv2.data.haarcascades + _haar_file_name)
+        except:
+            st.session_state[key] = None
+            st.error('Failed to create face detector', icon=':material/error:')
+    return st.session_state[key]
+
+
 def create_emotion_recognizer_endpoint(
         gc_project_id: str = GC_PROJECT_ID, gc_endpoint_id: str = GC_ENDPOINT_ID) -> aiplatform.Endpoint | None:
     """Creates emotion recognition model."""
@@ -194,9 +215,6 @@ def create_emotion_recognizer_endpoint(
     with st.spinner('Creating the emotion recognition model endpoint...'):
         st.session_state[key] = None
         try:
-            info = st.secrets["gcs_connection"]
-            credentials = service_account.Credentials.from_service_account_info(info)
-            aiplatform.init(project=gc_project_id, location='us-central1', credentials=credentials)
             st.write('inited')
             endpoint = aiplatform.Endpoint(endpoint_name=gc_endpoint_id)
             st.write('endpoint')
@@ -719,65 +737,69 @@ def on_tma_window_changed():
 if __name__ == '__main__':
     show_title_and_help()
     st.markdown('')
-    face_detector = create_face_detector()
-    emotion_recognizer_endpoint = create_emotion_recognizer_endpoint()
-    # emotion_recognizer = create_emotion_recognizer()
-    video_col_1, trailer_col_1 = st.columns(2, gap='large')
-    video_col_2, trailer_col_2 = st.columns(2, gap='large')
-    video_col_3, trailer_col_3 = st.columns(2, gap='large')
-    with video_col_1:
-        st.markdown('<h3 style="text-align: center;">Video</h3>', unsafe_allow_html=True)
-    with trailer_col_1:
-        st.markdown('<h3 style="text-align: center;">Trailer</h3>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size:10px"><br></p>', unsafe_allow_html=True)
-    with video_col_1:
-        uploaded_video = upload_video()
-    if uploaded_video is None:
-        with trailer_col_1:
-            st.info('Video have to be uploaded', icon=":material/info:")
-            st.session_state['initial_hyperparams'] = None
-    else:
-        if st.session_state['video_uploader_changed']:
-            st.session_state['video_uploader_changed'] = False
-            video_data = uploaded_video.read()
-            video_id = VideoId()
-            video_id.file_name = uploaded_video.name
-            video_id.md5 = compute_video_hash(video_data)
-            video_id.id = f'{Path(video_id.file_name).stem}_{video_id.md5}'
-            st.session_state['video_id'] = video_id
-            save_video(video_id, video_data)
-            video_info = retrieve_video_info(video_id)
-            st.session_state['video_info'] = video_info
-            with video_col_2:
-                arousals = get_arousals(video_id, video_info, face_detector, emotion_recognizer_endpoint)
-            st.session_state['arousals'] = arousals
-            initial_hyperparams = init_hyperparams(video_id)
-            st.session_state['initial_hyperparams'] = initial_hyperparams
-        else:
-            video_id = st.session_state['video_id']
-            video_info = st.session_state['video_info']
-            arousals = st.session_state['arousals']
-            initial_hyperparams = st.session_state['initial_hyperparams']
-        with video_col_2:
-            st.video(video_id.file_name)
-        hyperparams = set_hyperparams(video_id, initial_hyperparams)
-        if st.session_state['tma_window_changed']:
-            st.session_state['tma_window_changed'] = False
-            trend = fit_intensity_curve(arousals, hyperparams.tma_window, video_info)
-            st.session_state['trend'] = trend
-        else:
-            trend = st.session_state['trend']
-        fragments = find_fragments(trend, hyperparams, video_info)
-        with video_col_3:
-            plot_chart(trend, fragments)
-        if fragments.empty:
-            with trailer_col_1:
-                st.warning('No fragment is found', icon=":material/warning:")
-        else:
-            trailer_name = save_trailer(video_id, video_info, fragments)
-            with trailer_col_1:
-                download_trailer(trailer_name)
-            with trailer_col_2:
-                st.video(trailer_name)
-            with trailer_col_3:
-                display_fragments_table(fragments)
+    with st.spinner('Connecting to Google Cloud...'):
+        credentials = create_gc_credentials()
+        connect_to_gc_storage_bucket(credentials=credentials)
+        init_aiplatform(credentials=credentials)
+    # face_detector = create_face_detector()
+    # emotion_recognizer_endpoint = create_emotion_recognizer_endpoint()
+    # # emotion_recognizer = create_emotion_recognizer()
+    # video_col_1, trailer_col_1 = st.columns(2, gap='large')
+    # video_col_2, trailer_col_2 = st.columns(2, gap='large')
+    # video_col_3, trailer_col_3 = st.columns(2, gap='large')
+    # with video_col_1:
+    #     st.markdown('<h3 style="text-align: center;">Video</h3>', unsafe_allow_html=True)
+    # with trailer_col_1:
+    #     st.markdown('<h3 style="text-align: center;">Trailer</h3>', unsafe_allow_html=True)
+    #     st.markdown('<p style="font-size:10px"><br></p>', unsafe_allow_html=True)
+    # with video_col_1:
+    #     uploaded_video = upload_video()
+    # if uploaded_video is None:
+    #     with trailer_col_1:
+    #         st.info('Video have to be uploaded', icon=":material/info:")
+    #         st.session_state['initial_hyperparams'] = None
+    # else:
+    #     if st.session_state['video_uploader_changed']:
+    #         st.session_state['video_uploader_changed'] = False
+    #         video_data = uploaded_video.read()
+    #         video_id = VideoId()
+    #         video_id.file_name = uploaded_video.name
+    #         video_id.md5 = compute_video_hash(video_data)
+    #         video_id.id = f'{Path(video_id.file_name).stem}_{video_id.md5}'
+    #         st.session_state['video_id'] = video_id
+    #         save_video(video_id, video_data)
+    #         video_info = retrieve_video_info(video_id)
+    #         st.session_state['video_info'] = video_info
+    #         with video_col_2:
+    #             arousals = get_arousals(video_id, video_info, face_detector, emotion_recognizer_endpoint)
+    #         st.session_state['arousals'] = arousals
+    #         initial_hyperparams = init_hyperparams(video_id)
+    #         st.session_state['initial_hyperparams'] = initial_hyperparams
+    #     else:
+    #         video_id = st.session_state['video_id']
+    #         video_info = st.session_state['video_info']
+    #         arousals = st.session_state['arousals']
+    #         initial_hyperparams = st.session_state['initial_hyperparams']
+    #     with video_col_2:
+    #         st.video(video_id.file_name)
+    #     hyperparams = set_hyperparams(video_id, initial_hyperparams)
+    #     if st.session_state['tma_window_changed']:
+    #         st.session_state['tma_window_changed'] = False
+    #         trend = fit_intensity_curve(arousals, hyperparams.tma_window, video_info)
+    #         st.session_state['trend'] = trend
+    #     else:
+    #         trend = st.session_state['trend']
+    #     fragments = find_fragments(trend, hyperparams, video_info)
+    #     with video_col_3:
+    #         plot_chart(trend, fragments)
+    #     if fragments.empty:
+    #         with trailer_col_1:
+    #             st.warning('No fragment is found', icon=":material/warning:")
+    #     else:
+    #         trailer_name = save_trailer(video_id, video_info, fragments)
+    #         with trailer_col_1:
+    #             download_trailer(trailer_name)
+    #         with trailer_col_2:
+    #             st.video(trailer_name)
+    #         with trailer_col_3:
+    #             display_fragments_table(fragments)
