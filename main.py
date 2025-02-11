@@ -733,7 +733,7 @@ if __name__ == '__main__':
     st.markdown('')
     with st.spinner('Connecting to Google Cloud...'):
         credentials = create_gc_credentials()
-        connect_to_gc_storage_bucket(credentials=credentials)
+        gcs_bucket = connect_to_gc_storage_bucket(credentials=credentials)
         init_aiplatform(credentials=credentials)
     if ['face_detector'] in st.session_state:
         face_detector = st.session_state['face_detector']
@@ -776,7 +776,7 @@ if __name__ == '__main__':
             with video_col_2:
                 with st.spinner('Recognizing emotions intensity...'):
                     arousals = get_arousals(
-                        video_id, video_info, face_detector, emotion_recognizer_endpoint)
+                        video_id, video_info, face_detector, emotion_recognizer_endpoint, gcs_bucket)
     #         st.session_state['arousals'] = arousals
     #         initial_hyperparams = init_hyperparams(video_id)
     #         st.session_state['initial_hyperparams'] = initial_hyperparams
