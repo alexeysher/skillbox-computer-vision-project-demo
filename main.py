@@ -192,18 +192,10 @@ def upload_file_to_gc(bucket: storage.Bucket, file_path: str | PathLike, uploadi
 #     return st.session_state[key]
 
 
-def create_face_detector(_haar_file_name: str = HAAR_FILE) -> cv2.CascadeClassifier | None:
+def create_face_detector(_haar_file_name: str = HAAR_FILE) -> cv2.CascadeClassifier:
     """Creates face detector."""
-    key = 'face_detector'
-    if key in st.session_state:
-        return st.session_state[key]
-    with st.spinner('Creating face detector...'):
-        try:
-            st.session_state[key] = cv2.CascadeClassifier(cv2.data.haarcascades + _haar_file_name)
-        except:
-            st.session_state[key] = None
-            st.error('Failed to create face detector', icon=':material/error:')
-    return st.session_state[key]
+    face_detector = cv2.CascadeClassifier(cv2.data.haarcascades + _haar_file_name)
+    return face_detector
 
 
 def create_emotion_recognizer_endpoint(
@@ -741,7 +733,12 @@ if __name__ == '__main__':
         credentials = create_gc_credentials()
         connect_to_gc_storage_bucket(credentials=credentials)
         init_aiplatform(credentials=credentials)
-    # face_detector = create_face_detector()
+    if ['face_detector'] in st.session_state:
+        face_detector = st.session_state['face_detector']
+    else:
+        with st.spinner('Creating face detector...'):
+            face_detector = create_face_detector()
+            st.session_state['face_detector'] = face_detector
     # emotion_recognizer_endpoint = create_emotion_recognizer_endpoint()
     # # emotion_recognizer = create_emotion_recognizer()
     # video_col_1, trailer_col_1 = st.columns(2, gap='large')
