@@ -324,26 +324,25 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
 
     # st.write(f'recognize_video_emotions: {video_id.id=}, {video_info.frames_number=}, {face_detector=},'
     #          f'{emotion_recognizer_endpoint=}')
-    # video_capture = cv2.VideoCapture(video_id.file_name)
+    video_capture = cv2.VideoCapture(video_id.file_name)
     frame_index = 0
     faces_number = 0
     arousal = 0.0
     arousals = []
-    # empty = st.empty()
+    empty = st.empty()
     iter_size = 10
     iter_number = video_info.frames_number / iter_size
     iter_index = 0
-    # progress_bar = empty.progress(0.0)
+    progress_bar = empty.progress(0.0)
     start_time = datetime.now()
     st.write(f'starting loop...')
-    # while True:
-    #     # ret, image = video_capture.read()
-    #     st.write(f'frame read')
-    #     if frame_index % 10 > 0:
-    #         frame_index += 1
-    #         continue
-    #     if not ret:
-    #         break
+    while True:
+        ret, image = video_capture.read()
+        if frame_index % 10 > 0:
+            frame_index += 1
+            continue
+        if not ret:
+            break
     #     st.write(f'extracting face...')
     #     # face_image = _extract_face(image, face_detector)
     #     st.write(f'face extracted')
@@ -354,20 +353,20 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
     #         #     instances=[face_image], use_dedicated_endpoint=True, timeout=5).predictions[0][-1]
     #     #     arousal = 0.
     #     # arousals.append(arousal)
-    #     frame_index += 1
-    #     iter_index += 1
-    #     current_time = datetime.now()
-    #     elapsed_time = current_time - start_time
-    #     elapsed_time_str = str(elapsed_time).split('.')[0]
-    #     left_time = (elapsed_time / iter_index) * (iter_number - iter_index)
-    #     left_time_str = str(left_time).split('.')[0]
-    #     percent = iter_index / iter_number
-    #     progress_bar.progress(
-    #        percent,
-    #         f'{percent:.0%} [Elapsed time: {elapsed_time_str}, Left time: {left_time_str}]'
-    #     )
-    # # video_capture.release()
-    # empty.empty()
+        frame_index += 1
+        iter_index += 1
+        current_time = datetime.now()
+        elapsed_time = current_time - start_time
+        elapsed_time_str = str(elapsed_time).split('.')[0]
+        left_time = (elapsed_time / iter_index) * (iter_number - iter_index)
+        left_time_str = str(left_time).split('.')[0]
+        percent = iter_index / iter_number
+        progress_bar.progress(
+           percent,
+            f'{percent:.0%} [Elapsed time: {elapsed_time_str}, Left time: {left_time_str}]'
+        )
+    video_capture.release()
+    empty.empty()
     return arousals
 
 
