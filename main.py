@@ -308,19 +308,19 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
                              emotion_recognizer_endpoint: aiplatform.Endpoint) -> [float]:
     """Recognize intensity (arousal) of the emotions in each video frame."""
 
-    # def _extract_face(frame, detector):
-    #     """Extracts a face from the frame."""
-    #     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    #     face_rects = detector.detectMultiScale(gray_frame, SCALE_FACTOR, MIN_NEIGHBORS, 0,
-    #                                            (MIN_FACE_SIZE, MIN_FACE_SIZE))
-    #     if len(face_rects) == 0:
-    #         return
-    #     x = y = w = h = 0
-    #     for face_rect in face_rects:
-    #         if face_rect[2] > w and face_rect[3] > h:
-    #             x, y, w, h = face_rect
-    #     face = cv2.cvtColor(image[y:y + h, x:x + w], cv2.COLOR_BGR2RGB)
-    #     return np.asarray(face).tolist()
+    def _extract_face(frame, detector):
+        """Extracts a face from the frame."""
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        face_rects = detector.detectMultiScale(gray_frame, SCALE_FACTOR, MIN_NEIGHBORS, 0,
+                                               (MIN_FACE_SIZE, MIN_FACE_SIZE))
+        if len(face_rects) == 0:
+            return
+        x = y = w = h = 0
+        for face_rect in face_rects:
+            if face_rect[2] > w and face_rect[3] > h:
+                x, y, w, h = face_rect
+        face = cv2.cvtColor(image[y:y + h, x:x + w], cv2.COLOR_BGR2RGB)
+        return np.asarray(face).tolist()
 
     # st.write(f'recognize_video_emotions: {video_id.id=}, {video_info.frames_number=}, {face_detector=},'
     #          f'{emotion_recognizer_endpoint=}')
@@ -344,7 +344,7 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
         if not ret:
             break
     #     st.write(f'extracting face...')
-    #     # face_image = _extract_face(image, face_detector)
+        face_image = _extract_face(image, face_detector)
     #     st.write(f'face extracted')
     #     # if face_image is not None:
     #     #     faces_number += 1
