@@ -394,10 +394,11 @@ def get_arousals(
             with open(file_name, 'rb') as f:
                 arousals = pickle.load(f)
             return arousals
-        arousals = recognize_video_emotions(video_id, video_info, face_detector, emotion_recognizer_endpoint)
-        with open(file_name, 'wb') as f:
-            pickle.dump(arousals, f)
-        upload_file_to_gc(gc_file_path, file_name)
+        # arousals = recognize_video_emotions(video_id, video_info, face_detector, emotion_recognizer_endpoint)
+        # with open(file_name, 'wb') as f:
+        #     pickle.dump(arousals, f)
+        # upload_file_to_gc(gc_file_path, file_name)
+        arousals = [0, 0, 0]
     return arousals
 
 
