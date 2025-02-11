@@ -13,7 +13,6 @@ import plotly.graph_objects as go
 import streamlit as st
 from google.cloud import storage
 from google.cloud import aiplatform
-import vertexai
 from scipy.signal import find_peaks
 
 #
@@ -194,9 +193,12 @@ def create_emotion_recognizer_endpoint(
     with st.spinner('Creating the emotion recognition model endpoint...'):
         st.session_state[key] = None
         try:
-            endpoint_name = f'projects/{gc_project_id}/locations/us-central1/endpoints/{gc_endpoint_id}'
-            st.write(endpoint_name)
-            st.session_state[key] = aiplatform.Endpoint(endpoint_name=endpoint_name)
+            aiplatform.init(project=gc_project_id, location='us-central1')
+            st.write('inited')
+            endpoint = aiplatform.Endpoint(endpoint_name=gc_endpoint_id)
+            st.write('endpoint')
+            st.session_state[key] = endpoint
+            st.write('session_state')
         except Exception as e:
             st.write(e)
             st.session_state[key] = None
@@ -700,7 +702,6 @@ def on_tma_window_changed():
 
 
 if __name__ == '__main__':
-    vertexai.init(project=GC_PROJECT_ID, location="us-central1")
     show_title_and_help()
     st.markdown('')
     face_detector = create_face_detector()
