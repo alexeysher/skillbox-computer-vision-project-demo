@@ -753,8 +753,8 @@ if __name__ == '__main__':
     with trailer_col_1:
         st.markdown('<h3 style="text-align: center;">Trailer</h3>', unsafe_allow_html=True)
         st.markdown('<p style="font-size:10px"><br></p>', unsafe_allow_html=True)
-    # with video_col_1:
-    #     uploaded_video = upload_video()
+    with video_col_1:
+        uploaded_video = upload_video()
     # if uploaded_video is None:
     #     with trailer_col_1:
     #         st.info('Video have to be uploaded', icon=":material/info:")
