@@ -108,7 +108,7 @@ class HyperParams:
 
 
 def create_gc_credentials():
-    connection_info = st.secrets["gcs_credentials"]
+    connection_info = st.secrets["gc-service-account"]
     credentials = service_account.Credentials.from_service_account_info(connection_info)
     return credentials
 
