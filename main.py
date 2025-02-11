@@ -333,6 +333,7 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
         face_image = _extract_face(image, face_detector)
         if face_image is not None:
             faces_number += 1
+            st.write('predicting...')
             arousal = emotion_recognizer_endpoint.predict(
                 instances=[face_image], use_dedicated_endpoint=True, timeout=5).predictions[0][-1]
         arousals.append(arousal)
