@@ -312,8 +312,8 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
     #     face = cv2.cvtColor(image[y:y + h, x:x + w], cv2.COLOR_BGR2RGB)
     #     return np.asarray(face).tolist()
 
-    st.write(f'recognize_video_emotions: {video_id.id=}, {video_info.frames_number=}, {face_detector=},'
-             f'{emotion_recognizer_endpoint=}')
+    # st.write(f'recognize_video_emotions: {video_id.id=}, {video_info.frames_number=}, {face_detector=},'
+    #          f'{emotion_recognizer_endpoint=}')
     # video_capture = cv2.VideoCapture(video_id.file_name)
     frame_index = 0
     faces_number = 0
