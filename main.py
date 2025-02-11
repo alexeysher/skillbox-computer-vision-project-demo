@@ -360,7 +360,7 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
         elapsed_time_str = str(elapsed_time).split('.')[0]
         left_time = (elapsed_time / iter_index) * (iter_number - iter_index)
         left_time_str = str(left_time).split('.')[0]
-        percent = min(1., max(iter_index / iter_number, 0.))
+        percent = max(0., min(1., iter_index / iter_number))
         progress_bar.progress(
            percent,
             f'{percent:.0%} [Elapsed time: {elapsed_time_str}, Left time: {left_time_str}]'
