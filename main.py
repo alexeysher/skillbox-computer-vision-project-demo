@@ -323,7 +323,7 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
     iter_size = 10
     iter_number = video_info.frames_number / iter_size
     iter_index = 0
-    progress_bar = empty.progress(0.0)
+    # progress_bar = empty.progress(0.0)
     start_time = datetime.now()
     st.write(f'starting loop...')
     # while True:
