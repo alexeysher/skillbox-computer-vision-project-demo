@@ -408,7 +408,7 @@ def get_arousals(
         st.write('downloaded')
         return arousals
     st.write('not exist')
-    # arousals = recognize_video_emotions(video_id, video_info, face_detector, emotion_recognizer_endpoint)
+    arousals = recognize_video_emotions(video_id, video_info, face_detector, emotion_recognizer_endpoint)
     # with open(file_name, 'wb') as f:
     #     pickle.dump(arousals, f)
     # upload_file_to_gc(gc_file_path, file_name)
