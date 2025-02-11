@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from google.cloud import storage
 from google.cloud import aiplatform
+import vertexai
 from scipy.signal import find_peaks
 
 #
@@ -699,6 +700,7 @@ def on_tma_window_changed():
 
 
 if __name__ == '__main__':
+    vertexai.init(project=GC_PROJECT_ID, location="us-central1")
     show_title_and_help()
     st.markdown('')
     face_detector = create_face_detector()
