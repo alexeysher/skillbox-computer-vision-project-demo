@@ -395,16 +395,19 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
 def get_arousals(
         video_id: VideoId, video_info: VideoInfo,
         face_detector: cv2.CascadeClassifier, emotion_recognizer_endpoint: aiplatform.Endpoint,
-        gcs_folder_path: str | PathLike = GC_AROUSALS_PATH, file_name: str | PathLike = AROUSALS_PATH) -> list[float]:
+        gcs_bucket: storage.Bucket, gcs_folder_path: str | PathLike = GC_AROUSALS_PATH,
+        file_name: str | PathLike = AROUSALS_PATH) -> list[float]:
     st.write(f'{gcs_folder_path=}')
     if isinstance(gcs_folder_path, str):
         gcs_folder_path = Path(gcs_folder_path)
-    gc_file_path = gcs_folder_path / f'{video_id.id}.dat'
-    st.write(f'{gc_file_path=}')
-    # if download_file_from_gc(gc_file_path, file_name):
-    #     with open(file_name, 'rb') as f:
-    #         arousals = pickle.load(f)
-    #     return arousals
+    gcs_file_path = gcs_folder_path / f'{video_id.id}.dat'
+    st.write(f'{gcs_file_path=}')
+    if download_file_from_gc(gcs_bucket, gcs_file_path, file_name):
+        with open(file_name, 'rb') as f:
+            arousals = pickle.load(f)
+        st.write('downloaded')
+        return arousals
+    st.write('not exist')
     # arousals = recognize_video_emotions(video_id, video_info, face_detector, emotion_recognizer_endpoint)
     # with open(file_name, 'wb') as f:
     #     pickle.dump(arousals, f)
