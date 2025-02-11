@@ -745,14 +745,14 @@ if __name__ == '__main__':
         with st.spinner('Connection to emotion recognizer...'):
             emotion_recognizer_endpoint = create_emotion_recognizer_endpoint()
             st.session_state['emotion_recognizer_endpoint'] = emotion_recognizer_endpoint
-    # video_col_1, trailer_col_1 = st.columns(2, gap='large')
-    # video_col_2, trailer_col_2 = st.columns(2, gap='large')
-    # video_col_3, trailer_col_3 = st.columns(2, gap='large')
-    # with video_col_1:
-    #     st.markdown('<h3 style="text-align: center;">Video</h3>', unsafe_allow_html=True)
-    # with trailer_col_1:
-    #     st.markdown('<h3 style="text-align: center;">Trailer</h3>', unsafe_allow_html=True)
-    #     st.markdown('<p style="font-size:10px"><br></p>', unsafe_allow_html=True)
+    video_col_1, trailer_col_1 = st.columns(2, gap='large')
+    video_col_2, trailer_col_2 = st.columns(2, gap='large')
+    video_col_3, trailer_col_3 = st.columns(2, gap='large')
+    with video_col_1:
+        st.markdown('<h3 style="text-align: center;">Video</h3>', unsafe_allow_html=True)
+    with trailer_col_1:
+        st.markdown('<h3 style="text-align: center;">Trailer</h3>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size:10px"><br></p>', unsafe_allow_html=True)
     # with video_col_1:
     #     uploaded_video = upload_video()
     # if uploaded_video is None:
