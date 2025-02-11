@@ -755,10 +755,10 @@ if __name__ == '__main__':
         st.markdown('<p style="font-size:10px"><br></p>', unsafe_allow_html=True)
     with video_col_1:
         uploaded_video = upload_video()
-    # if uploaded_video is None:
-    #     with trailer_col_1:
-    #         st.info('Video have to be uploaded', icon=":material/info:")
-    #         st.session_state['initial_hyperparams'] = None
+    if uploaded_video is None:
+        with trailer_col_1:
+            st.info('Video have to be uploaded', icon=":material/info:")
+            st.session_state['initial_hyperparams'] = None
     # else:
     #     if st.session_state['video_uploader_changed']:
     #         st.session_state['video_uploader_changed'] = False
