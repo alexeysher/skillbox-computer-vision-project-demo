@@ -388,9 +388,10 @@ def get_arousals(
         gc_folder_path: str | PathLike = GC_AROUSALS_PATH, file_name: str | PathLike = AROUSALS_PATH) -> list[float]:
     with st.spinner('Recognizing emotions intensity...'):
         st.write(f'{gc_folder_path=}')
-        # if isinstance(gc_folder_path, str):
-        #     gc_folder_path = Path(gc_folder_path)
-        # gc_file_path = gc_folder_path / f'{video_id.id}.dat'
+        if isinstance(gc_folder_path, str):
+            gc_folder_path = Path(gc_folder_path)
+        gc_file_path = gc_folder_path / f'{video_id.id}.dat'
+        st.write(f'{gc_file_path=}')
         # if download_file_from_gc(gc_file_path, file_name):
         #     with open(file_name, 'rb') as f:
         #         arousals = pickle.load(f)
