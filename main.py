@@ -739,8 +739,12 @@ if __name__ == '__main__':
         with st.spinner('Creating face detector...'):
             face_detector = create_face_detector()
             st.session_state['face_detector'] = face_detector
-    # emotion_recognizer_endpoint = create_emotion_recognizer_endpoint()
-    # # emotion_recognizer = create_emotion_recognizer()
+    if 'emotion_recognizer_endpoint' in st.session_state:
+        emotion_recognizer_endpoint = st.session_state['emotion_recognizer_endpoint']
+    else:
+        with st.spinner('Connection to emotion recognizer...'):
+            emotion_recognizer_endpoint = create_emotion_recognizer_endpoint()
+            st.session_state['emotion_recognizer_endpoint'] = emotion_recognizer_endpoint
     # video_col_1, trailer_col_1 = st.columns(2, gap='large')
     # video_col_2, trailer_col_2 = st.columns(2, gap='large')
     # video_col_3, trailer_col_3 = st.columns(2, gap='large')
