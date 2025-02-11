@@ -326,38 +326,38 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
     progress_bar = empty.progress(0.0)
     start_time = datetime.now()
     st.write(f'starting loop...')
-    while True:
-        # ret, image = video_capture.read()
-        st.write(f'frame read')
-        if frame_index % 10 > 0:
-            frame_index += 1
-            continue
-        if not ret:
-            break
-        st.write(f'extracting face...')
-        # face_image = _extract_face(image, face_detector)
-        st.write(f'face extracted')
-        # if face_image is not None:
-        #     faces_number += 1
-            # st.write('predicting...')
-            # arousal = emotion_recognizer_endpoint.predict(
-            #     instances=[face_image], use_dedicated_endpoint=True, timeout=5).predictions[0][-1]
-        #     arousal = 0.
-        # arousals.append(arousal)
-        frame_index += 1
-        iter_index += 1
-        current_time = datetime.now()
-        elapsed_time = current_time - start_time
-        elapsed_time_str = str(elapsed_time).split('.')[0]
-        left_time = (elapsed_time / iter_index) * (iter_number - iter_index)
-        left_time_str = str(left_time).split('.')[0]
-        percent = iter_index / iter_number
-        progress_bar.progress(
-           percent,
-            f'{percent:.0%} [Elapsed time: {elapsed_time_str}, Left time: {left_time_str}]'
-        )
-    # video_capture.release()
-    empty.empty()
+    # while True:
+    #     # ret, image = video_capture.read()
+    #     st.write(f'frame read')
+    #     if frame_index % 10 > 0:
+    #         frame_index += 1
+    #         continue
+    #     if not ret:
+    #         break
+    #     st.write(f'extracting face...')
+    #     # face_image = _extract_face(image, face_detector)
+    #     st.write(f'face extracted')
+    #     # if face_image is not None:
+    #     #     faces_number += 1
+    #         # st.write('predicting...')
+    #         # arousal = emotion_recognizer_endpoint.predict(
+    #         #     instances=[face_image], use_dedicated_endpoint=True, timeout=5).predictions[0][-1]
+    #     #     arousal = 0.
+    #     # arousals.append(arousal)
+    #     frame_index += 1
+    #     iter_index += 1
+    #     current_time = datetime.now()
+    #     elapsed_time = current_time - start_time
+    #     elapsed_time_str = str(elapsed_time).split('.')[0]
+    #     left_time = (elapsed_time / iter_index) * (iter_number - iter_index)
+    #     left_time_str = str(left_time).split('.')[0]
+    #     percent = iter_index / iter_number
+    #     progress_bar.progress(
+    #        percent,
+    #         f'{percent:.0%} [Elapsed time: {elapsed_time_str}, Left time: {left_time_str}]'
+    #     )
+    # # video_capture.release()
+    # empty.empty()
     return arousals
 
 
