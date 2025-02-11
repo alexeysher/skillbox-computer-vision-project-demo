@@ -759,18 +759,18 @@ if __name__ == '__main__':
         with trailer_col_1:
             st.info('Video have to be uploaded', icon=":material/info:")
             st.session_state['initial_hyperparams'] = None
-    # else:
-    #     if st.session_state['video_uploader_changed']:
-    #         st.session_state['video_uploader_changed'] = False
-    #         video_data = uploaded_video.read()
-    #         video_id = VideoId()
-    #         video_id.file_name = uploaded_video.name
-    #         video_id.md5 = compute_video_hash(video_data)
-    #         video_id.id = f'{Path(video_id.file_name).stem}_{video_id.md5}'
-    #         st.session_state['video_id'] = video_id
-    #         save_video(video_id, video_data)
-    #         video_info = retrieve_video_info(video_id)
-    #         st.session_state['video_info'] = video_info
+    else:
+        if st.session_state['video_uploader_changed']:
+            st.session_state['video_uploader_changed'] = False
+            video_data = uploaded_video.read()
+            video_id = VideoId()
+            video_id.file_name = uploaded_video.name
+            video_id.md5 = compute_video_hash(video_data)
+            video_id.id = f'{Path(video_id.file_name).stem}_{video_id.md5}'
+            st.session_state['video_id'] = video_id
+            save_video(video_id, video_data)
+            video_info = retrieve_video_info(video_id)
+            st.session_state['video_info'] = video_info
     #         with video_col_2:
     #             arousals = get_arousals(video_id, video_info, face_detector, emotion_recognizer_endpoint)
     #         st.session_state['arousals'] = arousals
