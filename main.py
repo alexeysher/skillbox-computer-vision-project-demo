@@ -395,22 +395,21 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
 def get_arousals(
         video_id: VideoId, video_info: VideoInfo,
         face_detector: cv2.CascadeClassifier, emotion_recognizer_endpoint: aiplatform.Endpoint,
-        gc_folder_path: str | PathLike = GC_AROUSALS_PATH, file_name: str | PathLike = AROUSALS_PATH) -> list[float]:
-    with st.spinner('Recognizing emotions intensity...'):
-        st.write(f'{gc_folder_path=}')
-        if isinstance(gc_folder_path, str):
-            gc_folder_path = Path(gc_folder_path)
-        gc_file_path = gc_folder_path / f'{video_id.id}.dat'
-        st.write(f'{gc_file_path=}')
-        # if download_file_from_gc(gc_file_path, file_name):
-        #     with open(file_name, 'rb') as f:
-        #         arousals = pickle.load(f)
-        #     return arousals
-        # arousals = recognize_video_emotions(video_id, video_info, face_detector, emotion_recognizer_endpoint)
-        # with open(file_name, 'wb') as f:
-        #     pickle.dump(arousals, f)
-        # upload_file_to_gc(gc_file_path, file_name)
-        arousals = [0, 0, 0]
+        gcs_folder_path: str | PathLike = GC_AROUSALS_PATH, file_name: str | PathLike = AROUSALS_PATH) -> list[float]:
+    st.write(f'{gcs_folder_path=}')
+    if isinstance(gcs_folder_path, str):
+        gcs_folder_path = Path(gcs_folder_path)
+    gc_file_path = gcs_folder_path / f'{video_id.id}.dat'
+    st.write(f'{gc_file_path=}')
+    # if download_file_from_gc(gc_file_path, file_name):
+    #     with open(file_name, 'rb') as f:
+    #         arousals = pickle.load(f)
+    #     return arousals
+    # arousals = recognize_video_emotions(video_id, video_info, face_detector, emotion_recognizer_endpoint)
+    # with open(file_name, 'wb') as f:
+    #     pickle.dump(arousals, f)
+    # upload_file_to_gc(gc_file_path, file_name)
+    arousals = [0, 0, 0]
     return arousals
 
 
@@ -771,8 +770,10 @@ if __name__ == '__main__':
             save_video(video_id, video_data)
             video_info = retrieve_video_info(video_id)
             st.session_state['video_info'] = video_info
-    #         with video_col_2:
-    #             arousals = get_arousals(video_id, video_info, face_detector, emotion_recognizer_endpoint)
+            with video_col_2:
+                with st.spinner('Recognizing emotions intensity...'):
+                    arousals = get_arousals(
+                        video_id, video_info, face_detector, emotion_recognizer_endpoint)
     #         st.session_state['arousals'] = arousals
     #         initial_hyperparams = init_hyperparams(video_id)
     #         st.session_state['initial_hyperparams'] = initial_hyperparams
