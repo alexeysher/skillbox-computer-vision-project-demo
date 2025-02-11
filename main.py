@@ -312,6 +312,8 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
         face = cv2.cvtColor(image[y:y + h, x:x + w], cv2.COLOR_BGR2RGB)
         return np.asarray(face).tolist()
 
+    st.write(f'recognize_video_emotions: {video_id.id=}, {video_info.frames_number=}, {face_detector=},'
+             f'{emotion_recognizer_endpoint=}')
     video_capture = cv2.VideoCapture(video_id.file_name)
     frame_index = 0
     faces_number = 0
@@ -323,14 +325,18 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
     iter_index = 0
     progress_bar = empty.progress(0.0)
     start_time = datetime.now()
+    st.write(f'starting loop...')
     while True:
         ret, image = video_capture.read()
+        st.write(f'frame read')
         if frame_index % 10 > 0:
             frame_index += 1
             continue
         if not ret:
             break
+        st.write(f'extracting face...')
         face_image = _extract_face(image, face_detector)
+        st.write(f'face extracted')
         if face_image is not None:
             faces_number += 1
             # st.write('predicting...')
