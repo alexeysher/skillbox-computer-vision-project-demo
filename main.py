@@ -335,7 +335,7 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
     iter_index = 0
     progress_bar = empty.progress(0.0)
     start_time = datetime.now()
-    st.write(f'starting loop...')
+    # st.write(f'starting loop...')
     while True:
         ret, image = video_capture.read()
         if frame_index % 10 > 0:
@@ -435,26 +435,25 @@ def set_hyperparams(
         file_name: str | PathLike = HYPERPARAMS_PATH) -> HyperParams:
     """Sets up hyperparameters for fragments searching."""
     hyperparams = HyperParams()
-    with st.sidebar:
-        st.markdown('Intensity averaging')
-        with st.container(border=True):
-            hyperparams.tma_window = st.slider(
-                'Time window size [sec]', 0.05, 2.0, initial_hyperparams.tma_window, 0.05,
-                on_change=on_tma_window_changed)
-        st.markdown('Fragment searching')
-        with st.container(border=True):
-            hyperparams.min_arousal = st.slider(
-                'Min. peak', 0.0, 1.0, initial_hyperparams.min_arousal, 0.05)
-            hyperparams.min_prominence = st.slider(
-                'Min. prominence', 0.0, 0.5, initial_hyperparams.min_prominence, 0.05)
-            hyperparams.rel_height = st.slider(
-                'Min. relative height', 0.0, 1.0, initial_hyperparams.rel_height, 0.05)
-        st.markdown('Fragment selecting')
-        with st.container(border=True):
-            hyperparams.min_duration = st.slider(
-                'Min. duration [sec]', 0.0, 2.0, initial_hyperparams.min_duration, 0.05)
-            hyperparams.min_distance = st.slider(
-                'Min. distance [sec]', 0.5, 10.0, initial_hyperparams.min_distance, 0.5)
+    st.markdown('Intensity averaging')
+    with st.container(border=True):
+        hyperparams.tma_window = st.slider(
+            'Time window size [sec]', 0.05, 2.0, initial_hyperparams.tma_window, 0.05,
+            on_change=on_tma_window_changed)
+    st.markdown('Fragment searching')
+    with st.container(border=True):
+        hyperparams.min_arousal = st.slider(
+            'Min. peak', 0.0, 1.0, initial_hyperparams.min_arousal, 0.05)
+        hyperparams.min_prominence = st.slider(
+            'Min. prominence', 0.0, 0.5, initial_hyperparams.min_prominence, 0.05)
+        hyperparams.rel_height = st.slider(
+            'Min. relative height', 0.0, 1.0, initial_hyperparams.rel_height, 0.05)
+    st.markdown('Fragment selecting')
+    with st.container(border=True):
+        hyperparams.min_duration = st.slider(
+            'Min. duration [sec]', 0.0, 2.0, initial_hyperparams.min_duration, 0.05)
+        hyperparams.min_distance = st.slider(
+            'Min. distance [sec]', 0.5, 10.0, initial_hyperparams.min_distance, 0.5)
     if isinstance(gc_folder_path, str):
         gc_folder_path = Path(gc_folder_path)
     gc_file_path = gc_folder_path / f'{video_id.id}.dat'
@@ -776,17 +775,18 @@ if __name__ == '__main__':
                 with st.spinner('Recognizing emotions intensity...'):
                     arousals = get_arousals(
                         video_id, video_info, face_detector, emotion_recognizer_endpoint, gcs_bucket)
-    #         st.session_state['arousals'] = arousals
-    #         initial_hyperparams = init_hyperparams(video_id)
-    #         st.session_state['initial_hyperparams'] = initial_hyperparams
-    #     else:
-    #         video_id = st.session_state['video_id']
-    #         video_info = st.session_state['video_info']
-    #         arousals = st.session_state['arousals']
-    #         initial_hyperparams = st.session_state['initial_hyperparams']
-    #     with video_col_2:
-    #         st.video(video_id.file_name)
-    #     hyperparams = set_hyperparams(video_id, initial_hyperparams)
+            st.session_state['arousals'] = arousals
+            initial_hyperparams = init_hyperparams(video_id)
+            st.session_state['initial_hyperparams'] = initial_hyperparams
+        else:
+            video_id = st.session_state['video_id']
+            video_info = st.session_state['video_info']
+            arousals = st.session_state['arousals']
+            initial_hyperparams = st.session_state['initial_hyperparams']
+        with video_col_2:
+            st.video(video_id.file_name)
+        with st.sidebar:
+            hyperparams = set_hyperparams(video_id, initial_hyperparams)
     #     if st.session_state['tma_window_changed']:
     #         st.session_state['tma_window_changed'] = False
     #         trend = fit_intensity_curve(arousals, hyperparams.tma_window, video_info)
