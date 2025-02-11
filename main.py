@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from google.cloud import storage
 from google.cloud import aiplatform
+from google.oauth2 import service_account
 from scipy.signal import find_peaks
 
 #
@@ -193,7 +194,9 @@ def create_emotion_recognizer_endpoint(
     with st.spinner('Creating the emotion recognition model endpoint...'):
         st.session_state[key] = None
         try:
-            aiplatform.init(project=gc_project_id, location='us-central1')
+            info = st.secrets["gcs_connection"]
+            credentials = service_account.Credentials.from_service_account_info(info)
+            aiplatform.init(project=gc_project_id, location='us-central1', credentials=credentials)
             st.write('inited')
             endpoint = aiplatform.Endpoint(endpoint_name=gc_endpoint_id)
             st.write('endpoint')
