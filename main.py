@@ -319,7 +319,7 @@ def recognize_video_emotions(video_id: VideoId, video_info: VideoInfo, face_dete
     faces_number = 0
     arousal = 0.0
     arousals = []
-    empty = st.empty()
+    # empty = st.empty()
     iter_size = 10
     iter_number = video_info.frames_number / iter_size
     iter_index = 0
