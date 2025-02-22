@@ -22,7 +22,7 @@ After that app is searching for fragments containing a peak of emotion intensity
 Each such one should meet following criteria:
 - emotion intensity values are located between specified bounds 
 - frag
-- 
+- sss
 
 #### How to use
 For trailer creation just follow the next steps:

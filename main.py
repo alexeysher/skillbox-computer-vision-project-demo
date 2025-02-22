@@ -952,7 +952,6 @@ def main():
             st.info('Please upload video', icon=":material/info:")
         return
 
-
     # Creating components
     if st.session_state['video_uploader_changed']:
         st.session_state['video_uploader_changed'] = False
