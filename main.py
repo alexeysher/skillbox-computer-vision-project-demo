@@ -686,6 +686,7 @@ class Trailer(Storable):
         # self.data['fragment_url'] = self.data['fragment_file_path'].map(
         #     lambda file_path: f'http://localhost:{HTTP_SERVER_PORT}/{file_path}')
         self.data['selected'] = False
+        st.write(self.data)
         self._update_hash()
 
         # Saving data to GCS
