@@ -47,13 +47,16 @@ GC_INTENSITIES_PATH = 'intensities'  # Processed video intensity of intensities 
 GC_HYPERPARAMS_PATH = 'hyperparams'  # Processed video hyperparams folder path
 GC_FRAGMENTS_PATH = 'fragments'  # Processed video fragments folder path
 GC_TRAILER_PATH = 'trailer'  # Processed video fragments folder path
+GC_SCREENSHOTS_PATH = 'screenshots'
+
+# Local
+DATA_FOLDER_PATH = './data'
+
+data_folder_path = Path(DATA_FOLDER_PATH)
+if not data_folder_path.exists():
+    data_folder_path.mkdir()
 
 
-# folder_path = Path('./static')
-# if not folder_path.exists():
-#     folder_path.mkdir()
-#
-#
 class GoogleCloud:
 
     def __init__(self,
@@ -253,7 +256,7 @@ class Intensities(Storable):
     Emotion intensities in processed video
     """
 
-    _file_path = 'static/intensities.dat'
+    _file_path = f'{DATA_FOLDER_PATH}/intensities.dat'
     _index_name = 'step'
     _columns = ['intensity', 'time']
 
@@ -378,7 +381,7 @@ class HyperParams(Storable):
     Hyperparameters for searching fragments to trailer creation
     """
 
-    _file_path = 'static/hyperparams.dat'
+    _file_path = f'{DATA_FOLDER_PATH}/hyperparams.dat'
     _columns = ['low_limit', 'high_limit',
                 'init_low_bound', 'init_high_bound',
                 'low_bound', 'high_bound', 'step']
@@ -458,7 +461,7 @@ class HyperParams(Storable):
 
 class Fragments(Storable):
 
-    _file_path = 'static/fragments.dat'
+    _file_path = f'{DATA_FOLDER_PATH}/fragments.dat'
     _columns = [
         'start_step', 'peak_step', 'end_step', 'steps',
         'start', 'peak', 'end', 'time',
@@ -631,7 +634,8 @@ class Fragments(Storable):
 
 class Trailer(Storable):
 
-    _file_path = 'static/fragments.dat'
+    _file_path = f'{DATA_FOLDER_PATH}/fragments.dat'
+    _screenshots_path = f'{DATA_FOLDER_PATH}'
     _columns = [
         'screenshot_frame', 'screenshot_file_path', 'screenshot_url',
         'fragment_start_frame', 'fragment_frames_number',
@@ -643,11 +647,13 @@ class Trailer(Storable):
 
     def __init__(self,
                  video: Video, intensities: Intensities, fragments: Fragments,
-                 gc: GoogleCloud, gcs_folder_path: str | Path = GC_TRAILER_PATH):
+                 gc: GoogleCloud, gcs_folder_path: str | Path = GC_TRAILER_PATH,
+                 gcs_screenshot_folder_path: str | Path = GC_SCREENSHOTS_PATH):
         super().__init__(gc, gcs_folder_path, video.id + '.dat')
         self._video = video
         self._intensities = intensities
         self._fragments = fragments
+        self._gcs_screenshots_path = gcs_screenshot_folder_path
 
         # Downloading static from GCS
         if super().download_data_from_gcs(length=self._fragments.data.shape[0]):
@@ -660,9 +666,11 @@ class Trailer(Storable):
         self.create_data()
 
     def _save_screenshots(self):
-        for _, (frame, file_path) in self.data[
-            ['screenshot_frame', 'screenshot_file_path']].iterrows():
+        for _, (frame, file_path, gcs_file_path) in self.data[
+            ['screenshot_frame', 'screenshot_file_path', 'screenshot_gcs_file_path']].iterrows():
             self._video.save_screenshot(frame, file_path)
+            self._gc.upload_file(gcs_file_path, file_path)
+
 
     # def _save_fragments(self):
     #     for _, (start_frame, frames_number, file_path) in self.static[
@@ -674,17 +682,16 @@ class Trailer(Storable):
         super()._create()
         self.data['screenshot_frame'] = self._fragments.data['peak_step'] * self._intensities.step_frames
         self.data['screenshot_file_path'] = self._fragments.data.index.map(
-            lambda fragment: f'static/fragment_{fragment}.jpg'
+            lambda fragment: f'{self._screenshots_path}/fragment_{fragment}.jpg'
+        )
+        self.data['screenshot_gcs_file_path'] = self._fragments.data.index.map(
+            lambda fragment: f'{self._gcs_screenshots_path}/fragment_{fragment}.jpg'
         )
         self.data['screenshot_url'] = self.data['screenshot_file_path'].map(
-            lambda file_path: f'{st.secrets["server"]["url"]}/app/{file_path}')
+            lambda file_path: f'https://storage.cloud.google.com/{GC_BUCKET_ID}/'
+                              f'{self._gcs_screenshots_path}/{Path(file_path).name}')
         self.data['fragment_start_frame'] = self._fragments.data['start_step'] * self._intensities.step_frames
         self.data['fragment_frames_number'] = self._fragments.data['steps'] * self._intensities.step_frames
-        # self.static['fragment_file_path'] = self.static.index.map(
-        #     lambda fragment: f'static/fragment_{fragment}.mp4'
-        # )
-        # self.static['fragment_url'] = self.static['fragment_file_path'].map(
-        #     lambda file_path: f'http://localhost:{HTTP_SERVER_PORT}/{file_path}')
         self.data['selected'] = False
         st.write(self.data)
         self._update_hash()
