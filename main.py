@@ -677,7 +677,7 @@ class Trailer(Storable):
             lambda fragment: f'static/fragment_{fragment}.jpg'
         )
         self.data['screenshot_url'] = self.data['screenshot_file_path'].map(
-            lambda file_path: f'http://localhost:8501/app/{file_path}')
+            lambda file_path: f'{st.secrets["server"]["url"]}/app/{file_path}')
         self.data['fragment_start_frame'] = self._fragments.data['start_step'] * self._intensities.step_frames
         self.data['fragment_frames_number'] = self._fragments.data['steps'] * self._intensities.step_frames
         # self.data['fragment_file_path'] = self.data.index.map(
