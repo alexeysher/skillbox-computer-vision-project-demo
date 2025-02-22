@@ -175,6 +175,7 @@ class Video:
     def save_screenshot(self, frame: int, file_path: str | Path):
         data = self.get_frame(frame)
         image = Image.fromarray(data)
+        st.write(f'{file_path=}')
         image.save(file_path)
 
     def save_fragment(self, start_frame: int, frames_number: int, file_path: str | Path):
@@ -673,7 +674,7 @@ class Trailer(Storable):
         super()._create()
         self.data['screenshot_frame'] = self._fragments.data['peak_step'] * self._intensities.step_frames
         self.data['screenshot_file_path'] = self._fragments.data.index.map(
-            lambda fragment: f'static/fragment_{fragment}.jpg'
+            lambda fragment: f'./static/fragment_{fragment}.jpg'
         )
         self.data['screenshot_url'] = self.data['screenshot_file_path'].map(
             lambda file_path: f'http://localhost/{file_path}')
