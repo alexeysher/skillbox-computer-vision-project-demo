@@ -178,7 +178,6 @@ class Video:
     def save_screenshot(self, frame: int, file_path: str | Path):
         data = self.get_frame(frame)
         image = Image.fromarray(data)
-        st.write(f'{file_path=}')
         image.save(file_path)
 
     def save_fragment(self, start_frame: int, frames_number: int, file_path: str | Path):
@@ -694,7 +693,6 @@ class Trailer(Storable):
         self.data['fragment_start_frame'] = self._fragments.data['start_step'] * self._intensities.step_frames
         self.data['fragment_frames_number'] = self._fragments.data['steps'] * self._intensities.step_frames
         self.data['selected'] = False
-        st.write(self.data)
         self._update_hash()
 
         # Saving static to GCS
