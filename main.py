@@ -49,7 +49,7 @@ GC_FRAGMENTS_PATH = 'fragments'  # Processed video fragments folder path
 GC_TRAILER_PATH = 'trailer'  # Processed video fragments folder path
 
 # HTTP-server
-HTTP_SERVER_PORT = st.secrets['http-server']['port']
+# HTTP_SERVER_PORT = st.secrets['http-server']['port']
 
 
 class GoogleCloud:
@@ -674,7 +674,7 @@ class Trailer(Storable):
             lambda fragment: f'static/fragment_{fragment}.jpg'
         )
         self.data['screenshot_url'] = self.data['screenshot_file_path'].map(
-            lambda file_path: f'http://localhost:{HTTP_SERVER_PORT}/{file_path}')
+            lambda file_path: f'http://localhost/{file_path}')
         self.data['fragment_start_frame'] = self._fragments.data['start_step'] * self._intensities.step_frames
         self.data['fragment_frames_number'] = self._fragments.data['steps'] * self._intensities.step_frames
         # self.data['fragment_file_path'] = self.data.index.map(
@@ -922,10 +922,10 @@ def on_hyperparam_changed():
 def main():
     show_title_and_help()
     st.markdown('')
-    if 'http_server_is_running' not in st.session_state:
-        with st.spinner('Running HTTP-server...'):
-            subprocess.Popen(f'python -m http.server {HTTP_SERVER_PORT}')
-        st.session_state['http_server_is_running'] = True
+    # if 'http_server_is_running' not in st.session_state:
+    #     with st.spinner('Running HTTP-server...'):
+    #         subprocess.Popen(f'python -m http.server {HTTP_SERVER_PORT}')
+    #     st.session_state['http_server_is_running'] = True
     if 'google_cloud' in st.session_state:
         google_cloud = st.session_state['google_cloud']
     else:
