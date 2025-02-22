@@ -250,7 +250,7 @@ class Intensities(Storable):
     Emotion intensities in processed video
     """
 
-    _file_name = 'data/intensities.dat'
+    _file_name = 'static/intensities.dat'
     _index_name = 'step'
     _columns = ['intensity', 'time']
 
@@ -375,7 +375,7 @@ class HyperParams(Storable):
     Hyperparameters for searching fragments to trailer creation
     """
 
-    _file_name = 'data/hyperparams.dat'
+    _file_name = 'static/hyperparams.dat'
     _columns = ['low_limit', 'high_limit',
                 'init_low_bound', 'init_high_bound',
                 'low_bound', 'high_bound', 'step']
@@ -455,7 +455,7 @@ class HyperParams(Storable):
 
 class Fragments(Storable):
 
-    _file_name = 'data/fragments.dat'
+    _file_name = 'static/fragments.dat'
     _columns = [
         'start_step', 'peak_step', 'end_step', 'steps',
         'start', 'peak', 'end', 'time',
@@ -628,7 +628,7 @@ class Fragments(Storable):
 
 class Trailer(Storable):
 
-    _file_name = 'data/fragments.dat'
+    _file_name = 'static/fragments.dat'
     _columns = [
         'screenshot_frame', 'screenshot_file_path', 'screenshot_url',
         'fragment_start_frame', 'fragment_frames_number',
@@ -671,14 +671,14 @@ class Trailer(Storable):
         super()._create()
         self.data['screenshot_frame'] = self._fragments.data['peak_step'] * self._intensities.step_frames
         self.data['screenshot_file_path'] = self._fragments.data.index.map(
-            lambda fragment: f'data/fragment_{fragment}.jpg'
+            lambda fragment: f'static/fragment_{fragment}.jpg'
         )
         self.data['screenshot_url'] = self.data['screenshot_file_path'].map(
             lambda file_path: f'http://localhost:{HTTP_SERVER_PORT}/{file_path}')
         self.data['fragment_start_frame'] = self._fragments.data['start_step'] * self._intensities.step_frames
         self.data['fragment_frames_number'] = self._fragments.data['steps'] * self._intensities.step_frames
         # self.data['fragment_file_path'] = self.data.index.map(
-        #     lambda fragment: f'data/fragment_{fragment}.mp4'
+        #     lambda fragment: f'static/fragment_{fragment}.mp4'
         # )
         # self.data['fragment_url'] = self.data['fragment_file_path'].map(
         #     lambda file_path: f'http://localhost:{HTTP_SERVER_PORT}/{file_path}')
