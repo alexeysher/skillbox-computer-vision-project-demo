@@ -212,7 +212,7 @@ class Data:
 
 class Storable(Data):
 
-    _file_name: str
+    _file_path: str
 
     def __init__(self, gc: GoogleCloud, gcs_folder_path: str, gcs_file_name: str):
         super().__init__()
@@ -222,9 +222,9 @@ class Storable(Data):
         self._gcs_file_path = gcs_folder_path / gcs_file_name
 
     def download_data_from_gcs(self, length: int | None = None) -> bool:
-        if not self._gc.download_file(self._gcs_file_path, self._file_name):
+        if not self._gc.download_file(self._gcs_file_path, self._file_path):
             return False
-        with open(self._file_name, 'rb') as f:
+        with open(self._file_path, 'rb') as f:
             data = pickle.load(f)
         if not isinstance(data, dict):
             return False
@@ -240,9 +240,9 @@ class Storable(Data):
 
     def upload_data_to_gcs(self) -> bool:
         data = self.data.to_dict()
-        with open(self._file_name, 'wb') as f:
+        with open(self._file_path, 'wb') as f:
             pickle.dump(data, f)
-        return self._gc.upload_file(self._gcs_file_path, self._file_name)
+        return self._gc.upload_file(self._gcs_file_path, self._file_path)
 
 
 class Intensities(Storable):
@@ -250,7 +250,7 @@ class Intensities(Storable):
     Emotion intensities in processed video
     """
 
-    _file_name = 'static/intensities.dat'
+    _file_path = 'static/intensities.dat'
     _index_name = 'step'
     _columns = ['intensity', 'time']
 
@@ -375,7 +375,7 @@ class HyperParams(Storable):
     Hyperparameters for searching fragments to trailer creation
     """
 
-    _file_name = 'static/hyperparams.dat'
+    _file_path = 'static/hyperparams.dat'
     _columns = ['low_limit', 'high_limit',
                 'init_low_bound', 'init_high_bound',
                 'low_bound', 'high_bound', 'step']
@@ -455,7 +455,7 @@ class HyperParams(Storable):
 
 class Fragments(Storable):
 
-    _file_name = 'static/fragments.dat'
+    _file_path = 'static/fragments.dat'
     _columns = [
         'start_step', 'peak_step', 'end_step', 'steps',
         'start', 'peak', 'end', 'time',
@@ -628,7 +628,7 @@ class Fragments(Storable):
 
 class Trailer(Storable):
 
-    _file_name = 'static/fragments.dat'
+    _file_path = 'static/fragments.dat'
     _columns = [
         'screenshot_frame', 'screenshot_file_path', 'screenshot_url',
         'fragment_start_frame', 'fragment_frames_number',
