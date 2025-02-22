@@ -637,7 +637,8 @@ class Trailer(Storable):
     _file_path = f'{DATA_FOLDER_PATH}/fragments.dat'
     _screenshots_path = f'{DATA_FOLDER_PATH}'
     _columns = [
-        'screenshot_frame', 'screenshot_file_path', 'screenshot_url',
+        'screenshot_frame', 'screenshot_file_path',
+        'screenshot_gcs_file_path', 'screenshot_url',
         'fragment_start_frame', 'fragment_frames_number',
         # 'fragment_file_path', 'fragment_url',
         'selected'
