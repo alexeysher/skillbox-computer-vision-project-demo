@@ -1,11 +1,10 @@
 streamlit~=1.42.0
 opencv-python~=4.10.0.84
 pandas~=2.2.2
-plotly~=5.11.0
-protobuf~=4.25.6
+protobuf~=5.29.3
 scipy~=1.15.1
 numpy~=1.26.4
 pillow~=11.1.0
 google-cloud-storage~=2.19.0
 google-cloud-aiplatform~=1.71.0
-vertexai~=1.71.1
+altair~=4.2.0
