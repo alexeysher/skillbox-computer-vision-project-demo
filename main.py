@@ -49,11 +49,11 @@ GC_FRAGMENTS_PATH = 'fragments'  # Processed video fragments folder path
 GC_TRAILER_PATH = 'trailer'  # Processed video fragments folder path
 
 
-folder_path = Path('./static')
-if not folder_path.exists():
-    folder_path.mkdir()
-
-
+# folder_path = Path('./static')
+# if not folder_path.exists():
+#     folder_path.mkdir()
+#
+#
 class GoogleCloud:
 
     def __init__(self,
