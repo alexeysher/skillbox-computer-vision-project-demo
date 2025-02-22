@@ -104,7 +104,7 @@ class GoogleCloud:
 
 class VideoData(bytes):
     """
-    Video data.
+    Video static.
     """
 
 
@@ -144,7 +144,7 @@ class Video:
     _temp_file_path = 'temp.mp4'
 
     def _compute_md5(self, algorithm='md5') -> str:
-        """Computes the hash of video data using the specified algorithm."""
+        """Computes the hash of video static using the specified algorithm."""
         hash_func = hashlib.new(algorithm)
         hash_func.update(self._data)
         return hash_func.hexdigest()
@@ -284,7 +284,7 @@ class Intensities(Storable):
         # Calculating number of points
         self.points_number = math.ceil(self._video.info.frames_number / self.step_frames)
 
-        # Downloading data from GCS
+        # Downloading static from GCS
         if super().download_data_from_gcs(length=self.points_number):
             return
 
@@ -292,7 +292,7 @@ class Intensities(Storable):
         self._recognize_intensities()
         self._update_hash()
 
-        # Uploading data to GCS
+        # Uploading static to GCS
         super().upload_data_to_gcs()
 
     def _recognize_intensities(self):
@@ -313,7 +313,7 @@ class Intensities(Storable):
             return np.asarray(face).tolist()
 
         # Creating face detector
-        haar_file = (Path(cv2.__file__).parent / 'data' / self._haar_file_name).as_posix()
+        haar_file = (Path(cv2.__file__).parent / 'static' / self._haar_file_name).as_posix()
         face_detector = cv2.CascadeClassifier(haar_file)
 
         # Creating video capture
@@ -365,7 +365,7 @@ class Intensities(Storable):
         # Hiding progress bar
         empty.empty()
 
-        # Creating data
+        # Creating static
         self.data['intensity'] = values
         today = datetime.today()
         start_date = datetime(today.year, today.month, today.day)
@@ -395,13 +395,13 @@ class HyperParams(Storable):
                  gc: GoogleCloud, gcs_folder_path: str | Path = GC_HYPERPARAMS_PATH):
         super().__init__(gc, gcs_folder_path, video.id + '.dat')
 
-        # Downloading data from GCS
+        # Downloading static from GCS
         if super().download_data_from_gcs(length=len(self._index)):
             return
 
-        # Failed to download data from GCS
+        # Failed to download static from GCS
 
-        # Creating default data
+        # Creating default static
         intensity_limits = (intensities.data['intensity'].min(), intensities.data['intensity'].max())
         intensity_bounds = (max(intensity_limits[0], min(intensity_limits[1], 0.)), intensity_limits[1])
         intensity_step = min(intensity_limits[1] - intensity_limits[0], 0.01)
@@ -435,7 +435,7 @@ class HyperParams(Storable):
         self.data.index = self._index
         self._update_hash()
 
-        # Uploading data to GCS
+        # Uploading static to GCS
         super().upload_data_to_gcs()
 
     def get_limits(self, name: str) -> (float, float):
@@ -473,16 +473,16 @@ class Fragments(Storable):
         self._intensities = intensities
         self._hyperparams = hyperparams
 
-        # Downloading data from GCS
+        # Downloading static from GCS
         if super().download_data_from_gcs():
             return
 
-        # Failed to download data from GCS
+        # Failed to download static from GCS
 
         # Searching fragments
         # self.find_fragments()
 
-        # Saving data to GCS
+        # Saving static to GCS
         # super().upload_data_to_gcs()
 
     def find_fragments(self):
@@ -625,7 +625,7 @@ class Fragments(Storable):
         # Updating hash
         self._update_hash()
 
-        # Saving data to GCS
+        # Saving static to GCS
         super().upload_data_to_gcs()
 
 
@@ -649,14 +649,14 @@ class Trailer(Storable):
         self._intensities = intensities
         self._fragments = fragments
 
-        # Downloading data from GCS
+        # Downloading static from GCS
         if super().download_data_from_gcs(length=self._fragments.data.shape[0]):
             # Saving screenshots and fragments
             self._save_screenshots()
             # self._save_fragments()
             return
 
-        # Creating data
+        # Creating static
         self.create_data()
 
     def _save_screenshots(self):
@@ -665,12 +665,12 @@ class Trailer(Storable):
             self._video.save_screenshot(frame, file_path)
 
     # def _save_fragments(self):
-    #     for _, (start_frame, frames_number, file_path) in self.data[
+    #     for _, (start_frame, frames_number, file_path) in self.static[
     #         ['fragment_start_frame', 'fragment_frames_number', 'fragment_file_path']].iterrows():
     #         self._video.save_fragment(start_frame, frames_number, file_path)
 
     def create_data(self):
-        # Creating data
+        # Creating static
         super()._create()
         self.data['screenshot_frame'] = self._fragments.data['peak_step'] * self._intensities.step_frames
         self.data['screenshot_file_path'] = self._fragments.data.index.map(
@@ -680,16 +680,16 @@ class Trailer(Storable):
             lambda file_path: f'{st.secrets["server"]["url"]}/app/{file_path}')
         self.data['fragment_start_frame'] = self._fragments.data['start_step'] * self._intensities.step_frames
         self.data['fragment_frames_number'] = self._fragments.data['steps'] * self._intensities.step_frames
-        # self.data['fragment_file_path'] = self.data.index.map(
+        # self.static['fragment_file_path'] = self.static.index.map(
         #     lambda fragment: f'static/fragment_{fragment}.mp4'
         # )
-        # self.data['fragment_url'] = self.data['fragment_file_path'].map(
+        # self.static['fragment_url'] = self.static['fragment_file_path'].map(
         #     lambda file_path: f'http://localhost:{HTTP_SERVER_PORT}/{file_path}')
         self.data['selected'] = False
         st.write(self.data)
         self._update_hash()
 
-        # Saving data to GCS
+        # Saving static to GCS
         super().upload_data_to_gcs()
 
         # Saving screenshots and fragments
