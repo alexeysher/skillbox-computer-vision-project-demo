@@ -49,7 +49,7 @@ GC_FRAGMENTS_PATH = 'fragments'  # Processed video fragments folder path
 GC_TRAILER_PATH = 'trailer'  # Processed video fragments folder path
 
 
-folder_path = Path('app/static')
+folder_path = Path('./static')
 if not folder_path.exists():
     folder_path.mkdir()
 
@@ -674,10 +674,10 @@ class Trailer(Storable):
         super()._create()
         self.data['screenshot_frame'] = self._fragments.data['peak_step'] * self._intensities.step_frames
         self.data['screenshot_file_path'] = self._fragments.data.index.map(
-            lambda fragment: f'./static/fragment_{fragment}.jpg'
+            lambda fragment: f'static/fragment_{fragment}.jpg'
         )
         self.data['screenshot_url'] = self.data['screenshot_file_path'].map(
-            lambda file_path: f'http://localhost/{file_path}')
+            lambda file_path: f'http://localhost:8501/app/{file_path}')
         self.data['fragment_start_frame'] = self._fragments.data['start_step'] * self._intensities.step_frames
         self.data['fragment_frames_number'] = self._fragments.data['steps'] * self._intensities.step_frames
         # self.data['fragment_file_path'] = self.data.index.map(
